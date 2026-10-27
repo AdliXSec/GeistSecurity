@@ -450,68 +450,71 @@ export default function ProgressPage() {
         return next;
       });
 
-      const timeSinceLastEvent = Date.now() - lastEventTimeRef.current;
-      // If stream is not connected or idle (> 500ms without new event), smoothly advance events and stages
-      if (!streamConnected || timeSinceLastEvent > 500) {
+      // Only simulate progress if stream is NOT connected (offline demo mode or synthetic test environment)
+      if (!streamConnected) {
+        // Advance smoothly every 600ms (every 6 ticks of 100ms)
+        const tick = Math.round(elapsedTimeRef.current * 10);
+        if (tick % 6 !== 0) return;
+
         setSseRate(124 + Math.floor(Math.random() * 8));
         setEventsCount((prev) => prev + 1);
         setProgress((prev) => {
           if (prev < 98) {
-            const next = prev + 1;
+            const nextProg = prev + 1;
             if (auditMode === 'WHITEBOX') {
-              if (next === 25) {
+              if (nextProg === 25) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 1 ? { ...s, status: 'completed' } : s.id === 2 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Parsing manifest composer.lock / package-lock & querying OSV.dev CVE database...');
-              } else if (next === 45) {
+              } else if (nextProg === 45) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 2 ? { ...s, status: 'completed' } : s.id === 3 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Auditing unescaped template syntax ({!! $var !!}) & detecting dangerous DOM sinks...');
-              } else if (next === 65) {
+              } else if (nextProg === 65) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 3 ? { ...s, status: 'completed' } : s.id === 4 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Computing Shannon Entropy H(X)>=4.2 for API tokens & detecting .env credential leaks...');
-              } else if (next === 80) {
+              } else if (nextProg === 80) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 4 ? { ...s, status: 'completed' } : s.id === 5 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Tracing route/controller taint dataflows to database, filesystem & authorization sinks...');
-              } else if (next === 92) {
+              } else if (nextProg === 92) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 5 ? { ...s, status: 'completed' } : s.id === 6 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Gemini AI synthesizing contextual risk explanation & Before vs After remediation code...');
               }
             } else if (auditMode === 'BLACKBOX') {
-              if (next === 20) {
+              if (nextProg === 20) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 1 ? { ...s, status: 'completed' } : s.id === 2 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Scanning open port radar & verifying server socket responses...');
-              } else if (next === 40) {
+              } else if (nextProg === 40) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 2 ? { ...s, status: 'completed' } : s.id === 3 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Analyzing SSL/TLS certificates & security cipher suites...');
-              } else if (next === 60) {
+              } else if (nextProg === 60) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 3 ? { ...s, status: 'completed' } : s.id === 4 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Fingerprinting HTTP headers & verifying CVEs against OSV.dev database...');
-              } else if (next === 75) {
+              } else if (nextProg === 75) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 4 ? { ...s, status: 'completed' } : s.id === 5 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Probing sensitive paths (.env, .git) with Soft-404 anomaly guards...');
-              } else if (next === 88) {
+              } else if (nextProg === 88) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 5 ? { ...s, status: 'completed' } : s.id === 6 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Deobfuscating client JS chunks & analyzing Shannon Entropy secrets...');
-              } else if (next === 95) {
+              } else if (nextProg === 95) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 6 ? { ...s, status: 'completed' } : s.id === 7 ? { ...s, status: 'in_progress' } : s))
                 );
@@ -519,34 +522,34 @@ export default function ProgressPage() {
               }
             } else {
               // HYBRID
-              if (next === 25) {
+              if (nextProg === 25) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 1 ? { ...s, status: 'completed' } : s.id === 2 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Auditing package dependencies & probing open port perimeter...');
-              } else if (next === 50) {
+              } else if (nextProg === 50) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 2 ? { ...s, status: 'completed' } : s.id === 3 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Probing sensitive web resources & verifying SSL/TLS certificates...');
-              } else if (next === 70) {
+              } else if (nextProg === 70) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 3 ? { ...s, status: 'completed' } : s.id === 4 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Auditing unescaped templates ({!! $var !!}) & mining credential tokens...');
-              } else if (next === 85) {
+              } else if (nextProg === 85) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 4 ? { ...s, status: 'completed' } : s.id === 5 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('Tracing deep logic backend taint flows & deobfuscating JS assets...');
-              } else if (next === 93) {
+              } else if (nextProg === 93) {
                 setStages((curr) =>
                   curr.map((s) => (s.id === 5 ? { ...s, status: 'completed' } : s.id === 6 ? { ...s, status: 'in_progress' } : s))
                 );
                 setNarrative('AI correlation & generating Before vs After code patch recommendations...');
               }
             }
-            return next;
+            return nextProg;
           } else if (prev >= 98 && !isCompleted) {
             // For real live audit sessions, wait for actual backend completion signal (SSE or DB polling)
             const isDemo = !id || id === 'demo-fintech';
