@@ -159,6 +159,7 @@ const FEATURE_CARDS = [
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<AuditMode>('hybrid');
+  const [projectName, setProjectName] = useState('Fintech Payment Core');
   const [targetUrl, setTargetUrl] = useState('https://demo-fintech.auraglass.io');
   const [targetRepo, setTargetRepo] = useState('auraglass-labs/fintech-dashboard-api');
   const [currentBranch, setCurrentBranch] = useState('main');
@@ -190,6 +191,7 @@ export const HomePage: React.FC = () => {
     setMode(preset.mode);
     setTargetUrl(preset.url);
     setTargetRepo(preset.repo);
+    setProjectName(preset.title);
   };
 
   const handlePing = () => {
@@ -200,66 +202,46 @@ export const HomePage: React.FC = () => {
     }, 4500);
   };
 
-  const handleLaunchAudit = (e: React.FormEvent) => {
+  const handleLaunchAudit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isScanning) return;
 
     setIsScanning(true);
     setScanProgress(25);
     setScanTitle(`Initiating ${mode.toUpperCase()} Audit...`);
-    setScanSubtitle(`Sending handshake payload to ${targetRepo || targetUrl}`);
+    setScanSubtitle(`Target: ${projectName.trim() || targetRepo || targetUrl}`);
 
-    const stages = [
-      {
-        progress: 50,
-        title: 'Running AST Taint & Source Node Analysis...',
-        subtitle: 'Detecting innerHTML DOM sinks & high-entropy secret tokens',
-      },
-      {
-        progress: 75,
-        title: 'Correlating Reachable CVEs via OSV.dev...',
-        subtitle: '3 vulnerable packages identified across dependency tree',
-      },
-      {
-        progress: 100,
-        title: 'Audit Complete! Telemetry Synthesis Ready...',
-        subtitle: 'Executive report & interactive AST vulnerability graphs ready',
-      },
-    ];
-
-    let currentStage = 0;
-    const interval = setInterval(() => {
-      if (currentStage < stages.length) {
-        setScanProgress(stages[currentStage].progress);
-        setScanTitle(stages[currentStage].title);
-        setScanSubtitle(stages[currentStage].subtitle);
-        currentStage++;
-      } else {
-        clearInterval(interval);
-        setTimeout(async () => {
-          setIsScanning(false);
-          setScanProgress(0);
-          try {
-            let finalUrl = targetUrl.trim();
-            if (finalUrl && !finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
-              finalUrl = `http://${finalUrl}`;
-            }
-            const modeEnum = mode === 'hybrid' ? 'HYBRID' : mode === 'url' ? 'BLACKBOX' : 'WHITEBOX';
-            const res = await createAudit({
-              project_name: finalUrl ? `Audit: ${finalUrl.replace(/^https?:\/\//, '')}` : 'Lab Target Audit',
-              mode: modeEnum,
-              target_url: mode !== 'github' ? finalUrl : undefined,
-              github_repo_url: mode !== 'url' ? (targetRepo ? (targetRepo.startsWith('http') ? targetRepo : `https://github.com/${targetRepo}`) : undefined) : undefined,
-              branch: currentBranch || 'main',
-            });
-            navigate(`/audit/progress/${res.session_id}`);
-          } catch (err) {
-            console.warn('Real audit create failed or offline, fallback to demo progress:', err);
-            navigate('/audit/progress/demo-fintech');
-          }
-        }, 800);
+    try {
+      let finalUrl = targetUrl.trim();
+      if (finalUrl && !finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+        finalUrl = `http://${finalUrl}`;
       }
-    }, 800);
+      const modeEnum = mode === 'hybrid' ? 'HYBRID' : mode === 'url' ? 'BLACKBOX' : 'WHITEBOX';
+      const resolvedProjectName =
+        projectName.trim() || (finalUrl ? `Audit: ${finalUrl.replace(/^https?:\/\//, '')}` : 'Lab Target Audit');
+
+      const res = await createAudit({
+        project_name: resolvedProjectName,
+        mode: modeEnum,
+        target_url: mode !== 'github' ? finalUrl : undefined,
+        github_repo_url:
+          mode !== 'url'
+            ? targetRepo
+              ? targetRepo.startsWith('http')
+                ? targetRepo
+                : `https://github.com/${targetRepo}`
+              : undefined
+            : undefined,
+        branch: currentBranch || 'main',
+        scan_depth: crawlDepth === '1' ? 'Shallow' : crawlDepth === '5' ? 'Deep' : 'Medium',
+      });
+      navigate(`/audit/progress/${res.session_id}`);
+    } catch (err) {
+      console.warn('Real audit create failed or offline, fallback to demo progress:', err);
+      navigate('/audit/progress/demo-fintech');
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   const getLaunchButtonLabel = () => {
@@ -421,6 +403,34 @@ export const HomePage: React.FC = () => {
 
             {/* Launchpad Form */}
             <form className="flex flex-col gap-4" onSubmit={handleLaunchAudit}>
+              {/* Project Name (Audit Identifier) */}
+              <div className="flex flex-col gap-1.5 transition-all duration-200">
+                <div className="flex items-center justify-between text-xs">
+                  <label
+                    htmlFor="project-name"
+                    className="text-[#ededed] font-medium flex items-center gap-1.5"
+                  >
+                    <FolderCode className="w-3.5 h-3.5 text-[#71717a]" />
+                    Project Name
+                  </label>
+                  <span className="font-mono text-[11px] text-[#71717a]">Audit identifier</span>
+                </div>
+                <div className="relative flex items-center">
+                  <input
+                    id="project-name"
+                    name="project_name"
+                    type="text"
+                    required
+                    value={projectName}
+                    onChange={(e) => setProjectName(e.target.value)}
+                    placeholder="e.g. Modern E-Commerce Portal"
+                    aria-label="Project Name"
+                    data-testid="project-name-input"
+                    className="w-full bg-black border border-[#1e1e22] focus:border-[#71717a] focus:ring-0 text-white rounded-lg px-3 py-2.5 font-mono text-sm placeholder:text-[#52525b] transition-colors outline-none"
+                  />
+                </div>
+              </div>
+
               {/* URL input field with ping button */}
               {showUrlInput && (
                 <div className="flex flex-col gap-1.5 transition-all duration-200">

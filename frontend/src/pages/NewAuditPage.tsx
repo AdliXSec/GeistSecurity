@@ -201,6 +201,9 @@ export default function NewAuditPage() {
             </label>
             <input
               id="project-name"
+              name="project_name"
+              aria-label="Project Name"
+              data-testid="project-name-input"
               type="text"
               required
               value={projectName}
