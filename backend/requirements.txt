@@ -1,0 +1,36 @@
+# ==============================================================================
+# Aura Glass / SecAudit - Python Backend Requirements
+# Minimum Python Version: 3.10+
+# ==============================================================================
+
+# --- Core Web Framework & High-Performance ASGI Server ---
+fastapi>=0.110.0,<1.0.0
+uvicorn[standard]>=0.28.0
+starlette>=0.36.0
+
+# --- Data Validation & Configuration Settings ---
+pydantic>=2.6.0,<3.0.0
+pydantic-settings>=2.2.0,<3.0.0
+python-dotenv>=1.0.0
+
+# --- High-Performance Async Networking & HTML/DOM Parsing ---
+httpx>=0.27.0,<1.0.0
+beautifulsoup4>=4.12.0,<5.0.0
+soupsieve>=2.5
+
+# --- Asynchronous SQLite Database Engine ---
+aiosqlite>=0.20.0,<1.0.0
+
+# --- Real-Time Telemetry & SSE (Server-Sent Events) ---
+sse-starlette>=2.0.0,<4.0.0
+
+# --- Template Parsing & YAML Profiles ---
+PyYAML>=6.0.0
+
+# --- Multipart Form Data & File Ingestion ---
+python-multipart>=0.0.9
+
+# --- Testing & Code Quality Assurance (Development) ---
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+anyio>=4.0.0

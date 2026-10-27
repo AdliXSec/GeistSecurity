@@ -1,0 +1,42 @@
+# ==============================================================================
+# SecAudit / Aura Glass - Backend Docker Ignore Rules
+# ==============================================================================
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local environment files & secrets (injected via docker run or env_file)
+.env
+.env.local
+*.pem
+*.key
+
+# Local database & state
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+secaudit.db
+
+# Logs & temp folders
+*.log
+data/
+uploads/
+reports/
+target/
+tasks/

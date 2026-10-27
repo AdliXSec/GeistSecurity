@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: #000;
+  color: #ededed;
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+}

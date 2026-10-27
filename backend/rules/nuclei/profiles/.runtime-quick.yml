@@ -1,0 +1,13 @@
+severity:
+- critical
+- high
+- medium
+- low
+stop-at-first-match: false
+templates:
+- /home/leexy/testsprite/secaudit/backend/rules/nuclei/01-sensitive-exposures/environment-secrets
+- /home/leexy/testsprite/secaudit/backend/rules/nuclei/01-sensitive-exposures/version-control-git
+- /home/leexy/testsprite/secaudit/backend/rules/nuclei/01-sensitive-exposures/sourcemaps-and-ide
+- /home/leexy/testsprite/secaudit/backend/rules/nuclei/02-misconfigurations/headers-and-cors
+- /home/leexy/testsprite/secaudit/backend/rules/nuclei/02-misconfigurations/debug-and-info-leaks
+- /home/leexy/testsprite/secaudit/backend/rules/nuclei/03-often-overlooked/takeovers

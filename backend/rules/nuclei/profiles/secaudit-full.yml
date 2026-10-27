@@ -1,0 +1,20 @@
+# SecAudit Comprehensive Audit Profile
+# Mode Audit Lengkap: Seluruh template terkurasi (Exposures, Misconfigs, Panels, DAST, KEVs)
+# Estimasi Durasi: 1-3 menit
+
+templates:
+  - 01-sensitive-exposures
+  - 02-misconfigurations
+  - 03-often-overlooked
+  - 04-panels-and-actuators
+  - 05-core-dast
+  - 06-cisa-kev-popular
+
+severity:
+  - critical
+  - high
+  - medium
+  - low
+  - info
+
+stop-at-first-match: false

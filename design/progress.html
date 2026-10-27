@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><title>Aura Glass — Fluid Security Auditor</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;background-color:#000000;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:#09090b;}::-webkit-scrollbar-thumb{background:#27272a;border-radius:2px;}::-webkit-scrollbar-thumb:hover{background:#3f3f46;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "secondary": "#0070f3",
+          "background": "#000000",
+          "surface": "#000000",
+          "surface-container": "#09090b",
+          "surface-container-high": "#121214",
+          "surface-container-highest": "#1c1c1f",
+          "surface-container-low": "#050505",
+          "surface-container-lowest": "#000000",
+          "on-surface": "#ededed",
+          "on-surface-variant": "#888888",
+          "primary": "#0070f3",
+          "primary-container": "#0070f3",
+          "on-primary-container": "#ffffff",
+          "outline": "#27272a",
+          "outline-variant": "#1c1c1f",
+          "error": "#f87171"
+        },
+        fontFamily: {
+          sans: ["Geist", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+          mono: ["JetBrains Mono", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"]
+        }
+      }
+    }
+  }
+</script></head><body class="bg-black font-sans text-[#ededed] antialiased min-h-screen relative selection:bg-[#0070f3] selection:text-white"><header class="w-full border-b border-zinc-800/60 bg-black/80 backdrop-blur-md sticky top-0 z-50">
+<div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<a class="flex items-center gap-2.5 text-zinc-100 group" href="#">
+<div class="w-5 h-5 flex items-center justify-center">
+<svg class="w-4 h-4 fill-current text-white transition-transform group-hover:scale-105" viewbox="0 0 24 24">
+<path d="M12 2L2 20H22L12 2Z"></path>
+</svg>
+</div>
+<span class="font-medium text-sm tracking-tight text-white">Geist Security</span>
+</a>
+<span class="text-zinc-600 text-sm select-none">/</span>
+<button class="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-zinc-900 text-zinc-400 hover:text-zinc-100 text-xs transition-colors">
+<span>Acme Corp</span>
+<span class="material-symbols-outlined text-[14px]">unfold_more</span>
+</button>
+</div>
+<nav class="hidden md:flex items-center gap-1 text-xs">
+<a class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-colors" href="#">Audits</a>
+<a class="px-3 py-1.5 rounded-md text-white bg-zinc-900 font-medium transition-colors" href="#">Live Scan</a>
+<a class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-colors" href="#">Deployments</a>
+<a class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-colors" href="#">Settings</a>
+</nav>
+<div class="flex items-center gap-3">
+<a class="hidden sm:inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-100 transition-colors" href="#">
+<span>Docs</span>
+</a>
+<button class="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center text-[11px] font-mono font-medium text-white hover:opacity-90 transition-opacity">
+AC
+</button>
+</div>
+</div>
+</header><main class="relative z-10 w-full pt-20 pb-16 min-h-[calc(100vh-120px)]"><div class="w-full max-w-4xl mx-auto px-6 py-10 space-y-8">
+<!-- Header Breadcrumb & Status Bar -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-900">
+<div class="space-y-1.5">
+<div class="flex items-center gap-2 text-xs font-mono text-zinc-400">
+<span>PROJECTS</span>
+<span class="text-zinc-600">/</span>
+<span>AUDITS</span>
+<span class="text-zinc-600">/</span>
+<span class="text-white font-medium">#ag-live-8912cf</span>
+</div>
+<div class="flex items-center gap-2.5 flex-wrap">
+<h1 class="text-xl font-semibold tracking-tight text-white">demo-fintech.auraglass.io</h1>
+<div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-zinc-800 bg-zinc-900 text-xs font-mono text-zinc-300">
+<span class="material-symbols-outlined text-[13px] text-zinc-500">alt_route</span>
+<span>main</span>
+</div>
+<span class="text-zinc-600 text-xs">•</span>
+<span class="text-xs font-mono text-zinc-400">AST Graph In-Memory</span>
+</div>
+</div>
+<div class="flex items-center gap-2.5 self-start sm:self-center">
+<div class="flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-xs font-mono">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+<span>SSE Aktif:</span>
+<span class="font-medium text-emerald-300" id="sse-rate">128 event/sec</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900 text-zinc-300 text-xs font-mono">
+<span class="material-symbols-outlined text-[13px] text-zinc-500">schedule</span>
+<span id="timer-count">18.6s</span>
+<span class="text-zinc-600">(~22s)</span>
+</div>
+</div>
+</div>
+<!-- Main Bento Section: Radial Progress & Intelligence Narrative -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+<!-- Radial Progress Center Card -->
+<div class="md:col-span-5 rounded-xl border border-zinc-800 bg-zinc-950 p-6 flex flex-col items-center justify-between relative shadow-2xl overflow-hidden">
+<div class="w-full flex items-center justify-between text-xs font-mono text-zinc-400 border-b border-zinc-900 pb-3">
+<span class="flex items-center gap-2 font-medium tracking-wide uppercase text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#0070f3]"></span>
+          Audit Execution
+        </span>
+<span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 text-[11px]">Phase 4 / 5</span>
+</div>
+<div class="relative py-6 flex flex-col items-center justify-center my-auto">
+<div class="relative w-48 h-48 flex items-center justify-center">
+<svg class="w-48 h-48 -rotate-90 transform" viewbox="0 0 240 240">
+<circle class="text-zinc-900" cx="120" cy="120" fill="transparent" r="96" stroke="currentColor" stroke-width="6"></circle>
+<circle class="transition-all duration-700 ease-out" cx="120" cy="120" fill="transparent" id="progress-circle" r="96" stroke="#0070f3" stroke-dasharray="603.18" stroke-dashoffset="66.35" stroke-linecap="round" stroke-width="6"></circle>
+</svg>
+<div class="absolute flex flex-col items-center justify-center text-center">
+<span class="font-mono text-[10px] text-zinc-500 tracking-widest uppercase">AST Analysis</span>
+<div class="flex items-baseline tracking-tight my-0.5">
+<span class="text-4xl font-semibold text-white" id="progress-val">89</span>
+<span class="text-zinc-500 text-base font-light ml-0.5">%</span>
+</div>
+<span class="font-mono text-[11px] text-zinc-400 flex items-center gap-1.5 mt-1">
+<span class="w-1.5 h-1.5 rounded-full bg-[#0070f3] animate-ping"></span>
+<span>Calculating Entropy</span>
+</span>
+</div>
+</div>
+</div>
+<!-- Metric Bar inside gauge -->
+<div class="w-full grid grid-cols-3 gap-2 pt-4 border-t border-zinc-900 text-center font-mono">
+<div class="p-2 rounded bg-zinc-900/40 border border-zinc-850">
+<span class="text-[10px] text-zinc-500 block">AST Nodes</span>
+<span class="text-xs font-semibold text-zinc-200 mt-0.5 block">14,290</span>
+</div>
+<div class="p-2 rounded bg-zinc-900/40 border border-zinc-850">
+<span class="text-[10px] text-zinc-500 block">Entropy</span>
+<span class="text-xs font-semibold text-emerald-400 mt-0.5 block">7.94 <span class="text-[9px] text-zinc-500 font-normal">bits</span></span>
+</div>
+<div class="p-2 rounded bg-zinc-900/40 border border-zinc-850">
+<span class="text-[10px] text-zinc-500 block">Taint Paths</span>
+<span class="text-xs font-semibold text-amber-400 mt-0.5 block">2 Detected</span>
+</div>
+</div>
+</div>
+<!-- Narrative AI Intelligence & Diagnosis Card -->
+<div class="md:col-span-7 flex flex-col gap-4 justify-between">
+<!-- Storyteller Dialogue Card -->
+<div class="rounded-xl border border-zinc-800 bg-zinc-950 p-6 flex-1 flex flex-col justify-between shadow-2xl relative">
+<div>
+<div class="flex items-center justify-between pb-3 mb-4 border-b border-zinc-900">
+<div class="flex items-center gap-2">
+<div class="w-5 h-5 rounded border border-zinc-800 bg-zinc-900 flex items-center justify-center text-zinc-300">
+<span class="material-symbols-outlined text-[13px]">smart_toy</span>
+</div>
+<span class="text-xs font-semibold text-white tracking-tight">Storyteller Intelligence</span>
+</div>
+<span class="font-mono text-[10px] uppercase text-zinc-500 tracking-wider px-2 py-0.5 rounded border border-zinc-850 bg-zinc-900">Live Narrative</span>
+</div>
+<div class="rounded-lg border border-zinc-800/70 bg-black p-4">
+<div class="flex items-start gap-3">
+<div class="w-6 h-6 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 flex items-center justify-center flex-shrink-0 text-xs font-mono font-medium">
+                AI
+              </div>
+<div class="space-y-2 min-w-0 flex-1">
+<span class="font-mono text-[11px] text-zinc-400 block">Telemetry Reasoning Engine</span>
+<p class="text-xs text-zinc-300 leading-relaxed font-sans" id="storyteller-quote">
+                  “Aura Glass sedang memeriksa <span class="text-white font-medium">4 file bundle vendor</span> dan mendeteksi token dengan nilai entropi tinggi pada static chunk <code class="text-[#0070f3] bg-zinc-900 border border-zinc-800 px-1 py-0.5 rounded font-mono text-[11px]">main.5c88b.js</code>. Kandidat token OpenAI sk-proj telah dipetakan untuk proteksi zero-retention.”
+                </p>
+<div class="flex items-center gap-3 pt-2 border-t border-zinc-900 text-[10px] font-mono text-zinc-400">
+<span class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    AST Memory: Clean
+                  </span>
+<span class="text-zinc-700">•</span>
+<span>Zero PII Leak Verified</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-4 border-t border-zinc-900 mt-4">
+<div class="flex items-center justify-between text-xs text-zinc-400 mb-2 font-mono">
+<span>Spektrum Audit Selesai</span>
+<span class="text-white font-medium">4 / 5 Tahapan</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-zinc-900 overflow-hidden">
+<div class="h-full bg-white rounded-full w-[89%] transition-all duration-500"></div>
+</div>
+</div>
+</div>
+<!-- Preliminary Findings Banner -->
+<div class="rounded-xl border border-zinc-800 bg-zinc-950 p-4 flex items-center justify-between gap-3 shadow-sm">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-8 h-8 rounded border border-amber-500/20 bg-amber-500/10 text-amber-400 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[17px]">warning</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-mono text-[10px] text-amber-400 font-medium uppercase tracking-wider">Temuan Awal (Tervalidasi)</span>
+<span class="text-xs font-medium text-white truncate">1 XSS Reflected • 1 Prototype Pollution</span>
+<span class="font-mono text-[11px] text-zinc-400 truncate">CWE-79 • CVE-2021-23337 dalam lodash</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-zinc-500 text-[18px] flex-shrink-0">verified</span>
+</div>
+</div>
+</div>
+<!-- 5-Phase Pipeline Stepper -->
+<div class="space-y-3">
+<div class="flex items-center justify-between text-xs">
+<span class="font-mono text-zinc-400 uppercase tracking-wider text-[11px] font-medium">Tahapan Pipa Audit Komprehensif</span>
+<span class="font-mono text-zinc-500 text-[11px]">5 Fase Terintegrasi</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+<div class="p-3 rounded-lg border border-zinc-800 bg-zinc-950 flex flex-col gap-1 transition-all">
+<div class="flex items-center justify-between">
+<span class="font-mono text-[11px] text-zinc-300 font-medium flex items-center gap-1.5">
+<span class="w-3.5 h-3.5 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-[9px] font-bold">✓</span>
+            Fase 01
+          </span>
+<span class="px-1.5 py-0.2 rounded bg-zinc-900 text-zinc-400 font-mono text-[10px]">Selesai</span>
+</div>
+<p class="text-xs text-white font-medium truncate mt-0.5">Inisialisasi &amp; Recon</p>
+<span class="font-mono text-[10px] text-zinc-500 truncate">TLS 1.3 OK</span>
+</div>
+<div class="p-3 rounded-lg border border-zinc-800 bg-zinc-950 flex flex-col gap-1 transition-all">
+<div class="flex items-center justify-between">
+<span class="font-mono text-[11px] text-zinc-300 font-medium flex items-center gap-1.5">
+<span class="w-3.5 h-3.5 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-[9px] font-bold">✓</span>
+            Fase 02
+          </span>
+<span class="px-1.5 py-0.2 rounded bg-zinc-900 text-amber-400 font-mono text-[10px]">3 Vuln</span>
+</div>
+<p class="text-xs text-white font-medium truncate mt-0.5">Database OSV.dev</p>
+<span class="font-mono text-[10px] text-zinc-500 truncate">Lodash / Axios</span>
+</div>
+<div class="p-3 rounded-lg border border-zinc-800 bg-zinc-950 flex flex-col gap-1 transition-all">
+<div class="flex items-center justify-between">
+<span class="font-mono text-[11px] text-zinc-300 font-medium flex items-center gap-1.5">
+<span class="w-3.5 h-3.5 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-[9px] font-bold">✓</span>
+            Fase 03
+          </span>
+<span class="px-1.5 py-0.2 rounded bg-zinc-900 text-zinc-400 font-mono text-[10px]">Taint</span>
+</div>
+<p class="text-xs text-white font-medium truncate mt-0.5">Alur AST Taint</p>
+<span class="font-mono text-[10px] text-zinc-500 truncate">Line 48 Sink</span>
+</div>
+<div class="p-3 rounded-lg border border-[#0070f3] bg-zinc-950 flex flex-col gap-1 shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-mono text-[11px] text-white font-semibold flex items-center gap-1.5">
+<svg class="animate-spin h-3 w-3 text-[#0070f3]" fill="none" viewbox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"></path></svg>
+            Fase 04
+          </span>
+<span class="px-1.5 py-0.2 rounded bg-[#0070f3]/10 text-[#0070f3] font-mono text-[10px] font-medium">89% Aktif</span>
+</div>
+<p class="text-xs text-white font-semibold truncate mt-0.5">Bundel JS &amp; Entropi</p>
+<span class="font-mono text-[10px] text-zinc-400 truncate">Shannon analysis</span>
+</div>
+<div class="p-3 rounded-lg border border-zinc-900 bg-zinc-950/60 opacity-60 flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-mono text-[11px] text-zinc-500 flex items-center gap-1.5">
+<span class="w-3.5 h-3.5 rounded-full border border-zinc-800 flex items-center justify-center text-[9px] text-zinc-600">5</span>
+            Fase 05
+          </span>
+<span class="px-1.5 py-0.2 rounded bg-zinc-900 text-zinc-600 font-mono text-[10px]">Antre</span>
+</div>
+<p class="text-xs text-zinc-400 truncate mt-0.5">Solusi AI &amp; Diff</p>
+<span class="font-mono text-[10px] text-zinc-600 truncate">Auto-Patch</span>
+</div>
+</div>
+</div>
+<!-- Deployment Log Terminal Drawer -->
+<div class="rounded-xl border border-zinc-800 bg-black overflow-hidden flex flex-col shadow-2xl">
+<div class="px-4 py-3 border-b border-zinc-800 bg-zinc-950/90 flex flex-wrap items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span>
+</div>
+<span class="font-mono text-xs text-zinc-300 font-medium flex items-center gap-1.5 ml-1">
+<span class="material-symbols-outlined text-[14px] text-zinc-400">terminal</span>
+          Deployment Stream • <span class="text-zinc-500">event: audit_tick</span>
+</span>
+<span class="px-1.5 py-0.2 rounded border border-zinc-800 bg-zinc-900 font-mono text-[10px] text-zinc-400">Mode Verbatim</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-mono text-xs text-zinc-500 mr-2 hidden md:inline">
+          Total Event: <span class="text-zinc-300 font-mono" id="event-counter">2,013</span>
+</span>
+<button class="px-2.5 py-1 rounded-md border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white font-mono text-xs flex items-center gap-1.5 transition-all" id="btn-toggle-pause" type="button">
+<span class="material-symbols-outlined text-[13px]">pause</span>
+<span id="pause-text">Jeda Stream</span>
+</button>
+<button class="px-2.5 py-1 rounded-md border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white font-mono text-xs flex items-center gap-1.5 transition-all" id="btn-toggle-drawer" type="button">
+<span class="material-symbols-outlined text-[15px]" id="drawer-icon">expand_less</span>
+<span id="drawer-label">Sembunyikan Log Teknis</span>
+</button>
+</div>
+</div>
+<div class="p-4 font-mono text-xs flex flex-col gap-1 max-h-64 overflow-y-auto leading-relaxed select-text transition-all duration-300 bg-black" id="terminal-content">
+<div class="text-zinc-400 flex items-center gap-3">
+<span class="text-zinc-600 select-none w-8 text-right font-mono">01</span>
+<span class="text-zinc-500">[00:04.12]</span>
+<span class="px-1 py-0.2 rounded bg-zinc-900 text-cyan-400">[SSE:INIT]</span>
+<span>Target reachable: HTTP 200 OK (latency: 42ms) • TLS 1.3 handshake confirmed</span>
+</div>
+<div class="text-zinc-400 flex items-center gap-3">
+<span class="text-zinc-600 select-none w-8 text-right font-mono">02</span>
+<span class="text-zinc-500">[00:07.84]</span>
+<span class="px-1 py-0.2 rounded bg-zinc-900 text-cyan-400">[OSV:QUERY]</span>
+<span>Querying OSV.dev batch API for <code class="text-zinc-200">lodash@4.17.20</code>, <code class="text-zinc-200">axios@0.21.1</code></span>
+</div>
+<div class="text-zinc-400 flex items-center gap-3">
+<span class="text-zinc-600 select-none w-8 text-right font-mono">03</span>
+<span class="text-zinc-500">[00:09.11]</span>
+<span class="px-1 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">[OSV:MATCH]</span>
+<span class="text-amber-300">CVE-2021-23337 found (Prototype Pollution in lodash) — CVSS 7.2 (Medium Severity)</span>
+</div>
+<div class="text-zinc-400 flex items-center gap-3">
+<span class="text-zinc-600 select-none w-8 text-right font-mono">04</span>
+<span class="text-zinc-500">[00:11.45]</span>
+<span class="px-1 py-0.2 rounded bg-zinc-900 text-emerald-400">[AST:TAINT]</span>
+<span>Source identified: <code class="text-emerald-300 font-mono">window.location.search</code> at line 142 in <span class="text-zinc-200">searchModal.tsx</span></span>
+</div>
+<div class="text-zinc-400 flex items-center gap-3">
+<span class="text-zinc-600 select-none w-8 text-right font-mono">05</span>
+<span class="text-zinc-500">[00:12.90]</span>
+<span class="px-1 py-0.2 rounded bg-red-500/10 text-red-400 border border-red-500/20 font-medium">[AST:SINK]</span>
+<span class="text-red-400">Unsanitized sink reached: <code class="bg-red-500/10 px-1 py-0.2 rounded text-red-300 font-mono">element.innerHTML</code> in <span class="underline">searchModal.tsx:48</span> [CWE-79 XSS]</span>
+</div>
+<div class="text-zinc-400 flex items-center gap-3">
+<span class="text-zinc-600 select-none w-8 text-right font-mono">06</span>
+<span class="text-zinc-500">[00:14.33]</span>
+<span class="px-1 py-0.2 rounded bg-zinc-900 text-[#0070f3]">[SHANNON:CALC]</span>
+<span>Chunk <code class="text-zinc-200">auth-client.js</code>: calculated entropy 4.78 bits → Candidate OpenAI Secret Key</span>
+</div>
+<div class="text-zinc-400 flex items-center gap-3">
+<span class="text-zinc-600 select-none w-8 text-right font-mono">07</span>
+<span class="text-zinc-500">[00:14.80]</span>
+<span class="px-1 py-0.2 rounded bg-zinc-900 text-zinc-300 font-medium">[REDACT:APPLIED]</span>
+<span>Masking pattern <code class="text-zinc-300 font-mono">sk-proj-****9b4e</code> for zero memory retention policy</span>
+</div>
+<div class="text-zinc-200 flex items-center gap-3" id="dynamic-log-line">
+<span class="text-zinc-600 select-none w-8 text-right font-mono">08</span>
+<span class="text-zinc-500">[00:15.22]</span>
+<span class="px-1 py-0.2 rounded bg-[#0070f3]/15 text-[#0070f3] font-medium">[SSE:ACTIVE]</span>
+<span>Streaming AST tokens to AST-diff engine • evaluating safe substitute patch...</span>
+</div>
+</div>
+</div>
+<!-- Bottom Minimalist Footer Controls matching Vercel -->
+<div class="pt-4 border-t border-zinc-900 flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-2 text-zinc-500 font-mono text-xs">
+<span class="text-zinc-600">$</span>
+<span class="truncate max-w-[280px] sm:max-w-xs">geist audit --target auraglass-labs/core</span>
+</div>
+<div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+<button class="px-3.5 py-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors" id="btn-cancel" type="button">
+        Batalkan Pemindaian
+      </button>
+<a class="px-4 py-2 rounded-lg bg-white hover:bg-zinc-200 text-black text-xs font-medium transition-all flex items-center justify-center gap-2 group shadow-sm active:scale-[0.98]" data-path="bento-report-simulator" href="#">
+<span>Lewati ke Laporan Sementara</span>
+<span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+<script>
+  (function () {
+    let currentProgress = 89;
+    let secondsCount = 18.6;
+    let eventsCount = 2013;
+    let isPaused = false;
+    const circumference = 603.18;
+
+    const progressCircle = document.getElementById('progress-circle');
+    const progressVal = document.getElementById('progress-val');
+    const timerCount = document.getElementById('timer-count');
+    const eventCounter = document.getElementById('event-counter');
+    const sseRate = document.getElementById('sse-rate');
+    const btnTogglePause = document.getElementById('btn-toggle-pause');
+    const pauseText = document.getElementById('pause-text');
+    const btnToggleDrawer = document.getElementById('btn-toggle-drawer');
+    const terminalContent = document.getElementById('terminal-content');
+    const drawerIcon = document.getElementById('drawer-icon');
+    const drawerLabel = document.getElementById('drawer-label');
+
+    const interval = setInterval(() => {
+      if (isPaused) return;
+      secondsCount = +(secondsCount + 0.1).toFixed(1);
+      if (timerCount) timerCount.textContent = secondsCount + 's';
+
+      eventsCount += Math.floor(Math.random() * 4) + 1;
+      if (eventCounter) eventCounter.textContent = eventsCount.toLocaleString('id-ID');
+
+      if (currentProgress < 94 && Math.random() > 0.8) {
+        currentProgress += 1;
+        if (progressVal) progressVal.textContent = currentProgress;
+        const offset = circumference - (currentProgress / 100) * circumference;
+        if (progressCircle) progressCircle.style.strokeDashoffset = offset;
+      }
+
+      if (Math.random() > 0.75 && sseRate) {
+        const jitterRate = 122 + Math.floor(Math.random() * 12);
+        sseRate.textContent = jitterRate + ' event/sec';
+      }
+    }, 100);
+
+    if (btnTogglePause) {
+      btnTogglePause.addEventListener('click', () => {
+        isPaused = !isPaused;
+        if (isPaused) {
+          pauseText.textContent = 'Lanjutkan Stream';
+          sseRate.textContent = 'Dijeda (0 evt/s)';
+        } else {
+          pauseText.textContent = 'Jeda Stream';
+          sseRate.textContent = '125 event/sec';
+        }
+      });
+    }
+
+    let isDrawerCollapsed = false;
+    if (btnToggleDrawer) {
+      btnToggleDrawer.addEventListener('click', () => {
+        isDrawerCollapsed = !isDrawerCollapsed;
+        if (isDrawerCollapsed) {
+          terminalContent.classList.add('hidden');
+          drawerIcon.textContent = 'expand_more';
+          drawerLabel.textContent = 'Tampilkan Log Teknis';
+        } else {
+          terminalContent.classList.remove('hidden');
+          drawerIcon.textContent = 'expand_less';
+          drawerLabel.textContent = 'Sembunyikan Log Teknis';
+        }
+      });
+    }
+
+    const btnCancel = document.getElementById('btn-cancel');
+    if (btnCancel) {
+      btnCancel.addEventListener('click', () => {
+        const confirmCancel = window.confirm('Apakah Anda yakin ingin membatalkan audit aktif ini?');
+        if (confirmCancel) {
+          alert('Audit dihentikan.');
+        }
+      });
+    }
+  })();
+</script></main><footer class="w-full border-t border-zinc-800/50 py-5 bg-black">
+<div class="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono text-zinc-400">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+<span class="text-zinc-200">All systems operational</span>
+<span class="text-zinc-600">·</span>
+<span>Cluster latency 14ms</span>
+</div>
+<div class="flex items-center gap-4 text-zinc-500 hover:text-zinc-400">
+<a class="hover:text-zinc-200 transition-colors" href="#">Documentation</a>
+<a class="hover:text-zinc-200 transition-colors" href="#">API</a>
+<a class="hover:text-zinc-200 transition-colors" href="#">Security</a>
+<span>© 2025 Geist Sec</span>
+</div>
+</div>
+</footer></body></html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="web_standard" name="shell-type"/>
+<title>New Security Audit — Geist Security</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              black: "#000000",
+              surface: "#080808",
+              card: "#0d0d0f",
+              subtle: "#161619",
+              border: "#232328",
+              borderLight: "#2e2e36",
+              text: "#ededed",
+              muted: "#888891",
+              dim: "#55555c",
+              accent: "#47faf3"
+            }
+          },
+          fontFamily: {
+            sans: ['Geist', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Menlo', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    body {
+      background-color: #000000;
+      color: #ededed;
+      font-family: 'Geist', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    input:focus, select:focus {
+      outline: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-white selection:text-black">
+<!-- Minimal Vercel-Style Top Navigation -->
+<header class="w-full border-b border-brand-border/60 bg-brand-black/80 backdrop-blur-md sticky top-0 z-50">
+<div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+<!-- Brand & Workspace -->
+<div class="flex items-center gap-3">
+<a class="flex items-center gap-2.5 text-brand-text group" href="#">
+<div class="w-5 h-5 flex items-center justify-center">
+<svg class="w-4 h-4 fill-current text-white transition-transform group-hover:scale-105" viewbox="0 0 24 24">
+<path d="M12 2L2 20H22L12 2Z"></path>
+</svg>
+</div>
+<span class="font-medium text-sm tracking-tight text-white">Geist Security</span>
+</a>
+<span class="text-brand-dim text-sm select-none">/</span>
+<button class="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-brand-subtle text-brand-muted hover:text-brand-text text-xs transition-colors">
+<span>Acme Corp</span>
+<span class="material-symbols-outlined text-[14px]">unfold_more</span>
+</button>
+</div>
+<!-- Clean Centered / Tab Nav -->
+<nav class="hidden md:flex items-center gap-1 text-xs">
+<a class="px-3 py-1.5 rounded-md text-brand-muted hover:text-brand-text hover:bg-brand-subtle transition-colors" href="#">Audits</a>
+<a class="px-3 py-1.5 rounded-md text-white bg-brand-subtle font-medium transition-colors" href="#">New Scan</a>
+<a class="px-3 py-1.5 rounded-md text-brand-muted hover:text-brand-text hover:bg-brand-subtle transition-colors" href="#">Deployments</a>
+<a class="px-3 py-1.5 rounded-md text-brand-muted hover:text-brand-text hover:bg-brand-subtle transition-colors" href="#">Settings</a>
+</nav>
+<!-- Right User Actions -->
+<div class="flex items-center gap-3">
+<a class="hidden sm:inline-flex items-center gap-1 text-xs text-brand-muted hover:text-brand-text transition-colors" href="#">
+<span>Docs</span>
+</a>
+<button class="w-7 h-7 rounded-full bg-gradient-to-tr from-brand-border to-brand-borderLight border border-brand-border flex items-center justify-center text-[11px] font-mono font-medium text-white hover:opacity-90 transition-opacity">
+          AC
+        </button>
+</div>
+</div>
+</header>
+<!-- Main Centered Content Flow (Vercel Deploy / Add New Layout) -->
+<main class="w-full flex-1 flex flex-col items-center justify-center py-12 px-6">
+<div class="w-full max-w-2xl mx-auto space-y-8">
+<!-- Title & Intro Header -->
+<div class="space-y-1.5">
+<div class="flex items-center gap-2 text-xs font-mono text-brand-muted">
+<span>PROJECTS</span>
+<span>/</span>
+<span class="text-brand-text">NEW AUDIT</span>
+</div>
+<h1 class="text-2xl font-semibold tracking-tight text-white">New Security Audit</h1>
+<p class="text-sm text-brand-muted leading-normal">
+          Scan a web endpoint, repository, or both with autonomous AST analysis.
+        </p>
+</div>
+<!-- Main Input Card (Obsidian Minimal Card) -->
+<div class="rounded-xl border border-brand-border bg-brand-card/70 backdrop-blur-sm overflow-hidden shadow-2xl">
+<!-- Mode Switcher Tabs -->
+<div class="flex items-center p-1.5 border-b border-brand-border/80 bg-brand-surface/90">
+<button class="flex-1 py-1.5 px-3 text-xs font-medium rounded-lg bg-brand-subtle text-white transition-all text-center" id="tab-hybrid" type="button">
+            Hybrid Mode
+          </button>
+<button class="flex-1 py-1.5 px-3 text-xs font-medium rounded-lg text-brand-muted hover:text-white transition-all text-center" id="tab-dast" type="button">
+            Web DAST
+          </button>
+<button class="flex-1 py-1.5 px-3 text-xs font-medium rounded-lg text-brand-muted hover:text-white transition-all text-center" id="tab-sast" type="button">
+            Git SAST
+          </button>
+</div>
+<div class="p-6 space-y-6">
+<!-- Target Web Endpoint Input -->
+<div class="space-y-2" id="wrapper-url">
+<div class="flex items-center justify-between">
+<label class="text-xs font-medium text-brand-text tracking-wide" for="target-url">
+                Target Endpoint
+              </label>
+<div class="flex items-center gap-1.5 text-[11px] font-mono text-brand-muted">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+<span class="text-emerald-400">TLS 1.3</span>
+<span class="text-brand-dim">·</span>
+<span>42ms</span>
+</div>
+</div>
+<div class="relative flex items-center group">
+<span class="absolute left-3.5 text-brand-dim group-focus-within:text-brand-text transition-colors">
+<span class="material-symbols-outlined text-[17px]">globe</span>
+</span>
+<input class="w-full h-11 pl-10 pr-24 rounded-lg bg-brand-surface border border-brand-border hover:border-brand-borderLight focus:border-white/50 text-white font-mono text-xs transition-all placeholder:text-brand-dim" id="target-url" placeholder="https://your-domain.com" type="url" value="https://demo-fintech.auraglass.io"/>
+<div class="absolute right-3 flex items-center gap-1 text-[11px] font-medium text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded-md">
+                Verified
+              </div>
+</div>
+</div>
+<!-- Target Repository Input -->
+<div class="space-y-2" id="wrapper-repo">
+<div class="flex items-center justify-between">
+<label class="text-xs font-medium text-brand-text tracking-wide" for="target-repo">
+                Git Repository
+              </label>
+<span class="text-[11px] font-mono text-brand-muted flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-brand-dim">lock_open</span>
+                GitHub Connected
+              </span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+<div class="sm:col-span-8 relative flex items-center group">
+<span class="absolute left-3.5 text-brand-dim group-focus-within:text-brand-text transition-colors">
+<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24">
+<path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"></path>
+</svg>
+</span>
+<input class="w-full h-11 pl-10 pr-3 rounded-lg bg-brand-surface border border-brand-border hover:border-brand-borderLight focus:border-white/50 text-white font-mono text-xs transition-all placeholder:text-brand-dim" id="target-repo" type="text" value="auraglass-labs/fintech-dashboard-api"/>
+</div>
+<div class="sm:col-span-4 relative flex items-center">
+<span class="absolute left-3 text-brand-dim">
+<span class="material-symbols-outlined text-[15px]">alt_route</span>
+</span>
+<select class="w-full h-11 pl-8 pr-7 rounded-lg bg-brand-surface border border-brand-border hover:border-brand-borderLight text-brand-text font-mono text-xs appearance-none cursor-pointer focus:border-white/50 transition-all">
+<option selected="">main</option>
+<option>staging-v2</option>
+<option>hotfix/auth</option>
+</select>
+<span class="absolute right-2.5 text-brand-dim pointer-events-none">
+<span class="material-symbols-outlined text-[16px]">expand_more</span>
+</span>
+</div>
+</div>
+</div>
+<!-- Quick Benchmark Preset Chips -->
+<div class="space-y-2 pt-1">
+<div class="flex items-center justify-between text-xs">
+<span class="text-brand-muted">Presets</span>
+<span class="text-brand-dim text-[11px] font-mono">1-click config</span>
+</div>
+<div class="flex flex-wrap items-center gap-2">
+<button class="px-3 py-1.5 rounded-md text-xs font-mono bg-brand-subtle hover:bg-brand-border text-brand-text border border-brand-border transition-colors" type="button">
+                UMKM Demo
+              </button>
+<button class="px-3 py-1.5 rounded-md text-xs font-mono bg-white text-black font-medium border border-white transition-all shadow-sm" type="button">
+                Fintech API
+              </button>
+<button class="px-3 py-1.5 rounded-md text-xs font-mono bg-brand-subtle hover:bg-brand-border text-brand-text border border-brand-border transition-colors" type="button">
+                Edge Gateway
+              </button>
+</div>
+</div>
+<!-- Simplified Inline Configuration Settings -->
+<div class="pt-4 border-t border-brand-border/80 space-y-3.5">
+<div class="flex items-center justify-between">
+<span class="text-xs font-medium text-brand-text">Configuration</span>
+<span class="text-[11px] font-mono text-brand-dim">Zero disk retention</span>
+</div>
+<!-- Profile Toggle: Express vs Exhaustive -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-brand-surface border border-brand-border/60">
+<div class="space-y-0.5">
+<div class="flex items-center gap-2">
+<span class="text-xs font-medium text-white">Tactical Express Profile</span>
+<span class="text-[10px] font-mono text-brand-accent bg-brand-accent/10 px-1.5 py-0.2 rounded">~20s</span>
+</div>
+<p class="text-[11px] text-brand-muted">Realtime SSE audit pipeline optimized for active pull requests.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-8 h-4 bg-brand-border rounded-full peer peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-white"></div>
+</label>
+</div>
+<!-- Auto Redact Toggle -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-brand-surface border border-brand-border/60">
+<div class="space-y-0.5">
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-medium text-white">Auto-Redact Secrets &amp; PII</span>
+<span class="material-symbols-outlined text-[13px] text-emerald-400">check_circle</span>
+</div>
+<p class="text-[11px] text-brand-muted">Mask API keys and confidential payloads before telemetry capture.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-8 h-4 bg-brand-border rounded-full peer peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-white"></div>
+</label>
+</div>
+<!-- AI Patch Synthesis Toggle -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-brand-surface border border-brand-border/60">
+<div class="space-y-0.5">
+<div class="flex items-center gap-2">
+<span class="text-xs font-medium text-white">AI Solution Diff Generator</span>
+<span class="text-[10px] font-mono text-brand-muted">Gemini 2.0</span>
+</div>
+<p class="text-[11px] text-brand-muted">Auto-generate verified unified diff patches (`git apply`) for found vulnerabilities.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-8 h-4 bg-brand-border rounded-full peer peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-white"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- Card Footer & High Contrast Vercel Launch Button -->
+<div class="px-6 py-4 bg-brand-surface/90 border-t border-brand-border/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+<div class="flex items-center gap-2 text-xs font-mono text-brand-muted">
+<span class="text-brand-dim">$</span>
+<span class="truncate max-w-[260px] sm:max-w-xs">geist audit --target auraglass-labs/core</span>
+</div>
+<div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+<button class="px-3.5 py-2 text-xs font-medium text-brand-muted hover:text-white transition-colors" type="button">
+              Cancel
+            </button>
+<button class="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-white hover:bg-neutral-200 text-black text-xs font-medium transition-all flex items-center justify-center gap-2 group shadow-sm active:scale-[0.98]" id="launch-scan" type="button">
+<span>Run Audit</span>
+<kbd class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-neutral-100 text-neutral-800 border border-neutral-300">⌘↵</kbd>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Clean Minimalist Footer -->
+<footer class="w-full border-t border-brand-border/50 py-5 bg-brand-black">
+<div class="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono text-brand-muted">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+<span class="text-brand-text">All systems operational</span>
+<span class="text-brand-dim">·</span>
+<span>Cluster latency 14ms</span>
+</div>
+<div class="flex items-center gap-4 text-brand-dim hover:text-brand-muted">
+<a class="hover:text-brand-text transition-colors" href="#">Documentation</a>
+<a class="hover:text-brand-text transition-colors" href="#">API</a>
+<a class="hover:text-brand-text transition-colors" href="#">Security</a>
+<span>© 2025 Geist Sec</span>
+</div>
+</div>
+</footer>
+<script>
+    const tabHybrid = document.getElementById('tab-hybrid');
+    const tabDast = document.getElementById('tab-dast');
+    const tabSast = document.getElementById('tab-sast');
+    const wrapperUrl = document.getElementById('wrapper-url');
+    const wrapperRepo = document.getElementById('wrapper-repo');
+    const launchScan = document.getElementById('launch-scan');
+
+    function resetTabs() {
+      [tabHybrid, tabDast, tabSast].forEach(btn => {
+        btn.className = "flex-1 py-1.5 px-3 text-xs font-medium rounded-lg text-brand-muted hover:text-white transition-all text-center";
+      });
+    }
+
+    if (tabHybrid && tabDast && tabSast) {
+      tabHybrid.addEventListener('click', () => {
+        resetTabs();
+        tabHybrid.className = "flex-1 py-1.5 px-3 text-xs font-medium rounded-lg bg-brand-subtle text-white transition-all text-center";
+        wrapperUrl.style.opacity = '1';
+        wrapperRepo.style.opacity = '1';
+      });
+
+      tabDast.addEventListener('click', () => {
+        resetTabs();
+        tabDast.className = "flex-1 py-1.5 px-3 text-xs font-medium rounded-lg bg-brand-subtle text-white transition-all text-center";
+        wrapperUrl.style.opacity = '1';
+        wrapperRepo.style.opacity = '0.25';
+      });
+
+      tabSast.addEventListener('click', () => {
+        resetTabs();
+        tabSast.className = "flex-1 py-1.5 px-3 text-xs font-medium rounded-lg bg-brand-subtle text-white transition-all text-center";
+        wrapperUrl.style.opacity = '0.25';
+        wrapperRepo.style.opacity = '1';
+      });
+    }
+
+    if (launchScan) {
+      launchScan.addEventListener('click', () => {
+        launchScan.innerHTML = '<span>Starting Audit...</span>';
+        setTimeout(() => {
+          launchScan.innerHTML = '<span>Run Audit</span><kbd class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-neutral-100 text-neutral-800 border border-neutral-300">⌘↵</kbd>';
+        }, 1500);
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        if (launchScan) launchScan.click();
+      }
+    });
+  </script>
+</body></html>

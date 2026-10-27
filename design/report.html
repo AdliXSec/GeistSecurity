@@ -1,0 +1,733 @@
+<!DOCTYPE html><html class="dark" lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_standard" name="shell-type"><title>Aura Glass — Fluid Security Auditor</title><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;background-color:#000000;color:#ededed;}body{overscroll-behavior:none;font-family:'Geist',-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{fontFamily:{sans:['Geist',-apple-system,'Segoe UI',sans-serif],mono:['Geist Mono','JetBrains Mono',monospace]},colors:{"brand-blue":"#0070f3","brand-cyan":"#50e3c2","surface-950":"#0c0c0c","surface-900":"#121212","surface-800":"#181818","border-subtle":"#262626","border-muted":"#1f1f1f"}}}};</script></head><body class="bg-black font-sans text-[#ededed] antialiased min-h-screen relative selection:bg-[#0070f3] selection:text-white"><header class="w-full border-b border-zinc-800/80 bg-black/80 backdrop-blur-md sticky top-0 z-50"><div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between"><div class="flex items-center gap-3"><a class="flex items-center gap-2.5 text-zinc-100 group" href="#"><div class="w-5 h-5 flex items-center justify-center"><svg class="w-4 h-4 fill-current text-white transition-transform group-hover:scale-105" viewBox="0 0 24 24"><path d="M12 2L2 20H22L12 2Z"></path></svg></div><span class="font-medium text-sm tracking-tight text-white">Geist Security</span></a><span class="text-zinc-600 text-sm select-none">/</span><button class="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 text-xs transition-colors"><span class="">Acme Corp</span><span class="material-symbols-outlined text-[14px]">unfold_more</span></button></div><nav class="hidden md:flex items-center gap-1 text-xs"><a class="px-3 py-1.5 rounded-md text-white bg-zinc-900 font-medium transition-colors" href="#">Audits</a><a class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors" href="#">New Scan</a><a class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors" href="#">Deployments</a><a class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors" href="#">Settings</a></nav><div class="flex items-center gap-3"><a class="hidden sm:inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors" href="#"><span class="">Docs</span></a><button class="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center text-[11px] font-mono font-medium text-white hover:border-zinc-500 transition-colors">AC</button></div></div></header><main class="relative z-10 w-full min-h-[calc(100vh-120px)] py-8"><div class="flex flex-col w-full">
+<!-- Content Canvas Container -->
+<div class="w-full mx-auto md:px-6 space-y-4 pb-16 max-w-6xl px-6">
+<!-- Top Action & Meta Ribbon -->
+<div class="w-full space-y-4"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2"><div class="space-y-1"><div class="flex items-center gap-2 text-xs font-mono text-zinc-500"><span class="">PROJECTS</span><span class="">/</span><span class="">ACME-CORP</span><span class="">/</span><span class="text-zinc-300">AUDIT #9D42F0</span></div><h1 class="text-2xl font-semibold tracking-tight text-white flex items-center gap-3"><span class="">demo-fintech.auraglass.io</span><span class="text-[11px] font-mono font-medium px-2 py-0.5 rounded border border-blue-500/20 bg-blue-500/10 text-blue-400">HYBRID AUDIT</span></h1></div><div class="flex items-center gap-2"><button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 font-medium text-xs transition-colors shadow-sm" id="btn-export-pdf"><span class="material-symbols-outlined text-[15px] text-zinc-400">picture_as_pdf</span><span class="">Export PDF</span></button><button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 font-medium text-xs transition-colors shadow-sm" id="btn-share-link"><span class="material-symbols-outlined text-[15px] text-zinc-400">share</span><span class="">Share Link</span></button><button class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white hover:bg-zinc-200 text-black font-medium text-xs transition-colors shadow-sm" id="btn-re-audit"><span class="material-symbols-outlined text-[15px]">refresh</span><span class="">Re-run Audit</span></button></div></div><div class="flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-zinc-500 py-2.5 px-4 rounded-lg bg-zinc-950 border border-zinc-800/80"><div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981]"></span><span class="text-zinc-300">Audit Complete</span><span class="text-zinc-700">•</span><span class="">Completed 24s ago</span><span class="text-zinc-700">•</span><span class="">Duration 21.4s</span></div><div class="flex items-center gap-3"><span class="">AST Engine v4.2</span><span class="text-zinc-700">•</span><span class="text-zinc-400">SHA-256: 9d42f0a1c</span></div></div></div>
+<!-- Bento Grid Dashboard Tier -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch"><!-- Score Card (Spans 5 cols) -->
+<div class="lg:col-span-5 bg-[#0c0c0c] border border-zinc-800/80 rounded-xl p-6 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-4 border-b border-zinc-800/60">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-zinc-400 text-[18px]">speed</span>
+<span class="text-sm text-white font-medium">Security Health Score</span>
+</div>
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs font-mono transition-colors" id="btn-reset-sim" title="Kembalikan skor ke status awal">
+<span class="material-symbols-outlined text-[13px]">restart_alt</span>
+<span class="">Reset Simulasi</span>
+</button>
+</div>
+<div class="flex flex-col sm:flex-row items-center gap-6 py-6">
+<div class="relative w-36 h-36 flex items-center justify-center flex-shrink-0">
+<svg class="w-full h-full -rotate-90 transform" viewBox="0 0 120 120">
+<circle class="text-zinc-800" cx="60" cy="60" fill="transparent" r="50" stroke="currentColor" stroke-width="7"></circle>
+<circle class="text-rose-500 transition-all duration-700 ease-out" cx="60" cy="60" fill="transparent" id="score-ring-circle" r="50" stroke="currentColor" stroke-dasharray="314.159" stroke-dashoffset="141.37" stroke-linecap="round" stroke-width="7"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+<span class="font-mono text-4xl font-bold tracking-tight text-white leading-none" id="score-counter-val">55</span>
+<span class="font-mono text-[10px] text-zinc-500 uppercase tracking-widest mt-1.5">/ 100 PTS</span>
+</div>
+</div>
+<div class="flex flex-col items-center sm:items-start space-y-2 text-center sm:text-left">
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-0.5 rounded border border-rose-500/30 bg-rose-500/10 text-rose-400 font-mono text-xs font-semibold uppercase tracking-wide transition-colors" id="grade-badge">
+            Grade D
+          </span>
+<span class="text-xs text-zinc-300 font-medium" id="grade-status-desc">Rentan Eksploitasi</span>
+</div>
+<p class="text-xs text-zinc-400 leading-relaxed max-w-[230px]">
+          Dihitung dari paparan Hardcoded Secret, AST Taint XSS Sink, dan CVE Prototype Pollution.
+        </p>
+<div class="flex items-center gap-2 pt-1 font-mono text-xs text-zinc-400">
+<span class="text-emerald-400 font-medium" id="sim-points-label">+45 Poin Potensial</span>
+<span class="text-zinc-600">•</span>
+<span class="">Target Grade A</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-3 rounded-lg border border-zinc-800/60 bg-zinc-900/30 flex items-start gap-2.5 text-xs text-zinc-400">
+<span class="material-symbols-outlined text-blue-400 text-[17px] flex-shrink-0 mt-0.5">tune</span>
+<span class="">Klik <strong class="text-zinc-200 font-mono font-medium">"Simulasikan Patch"</strong> pada temuan untuk menguji kalkulasi skor pemulihan secara real-time.</span>
+</div>
+</div>
+<!-- Key Stats & Surface Scope (Spans 7 cols) -->
+<div class="lg:col-span-7 bg-[#0c0c0c] border border-zinc-800/80 rounded-xl p-6 flex flex-col justify-between">
+<div class="space-y-6">
+<div class="flex items-center justify-between pb-4 border-b border-zinc-800/60">
+<span class="text-sm text-white font-medium">Ringkasan Audit &amp; Cakupan Sasaran</span>
+<span class="font-mono text-xs text-zinc-500 flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981]"></span>
+        Target Terverifikasi Non-Destruktif
+      </span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+<div class="p-3.5 rounded-lg border border-zinc-800/80 bg-zinc-900/40">
+<span class="font-mono text-[11px] text-zinc-500 uppercase tracking-wider block">Total Temuan</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-mono text-2xl font-semibold text-white">4</span>
+<span class="font-mono text-xs text-rose-400 font-medium">(1 Critical)</span>
+</div>
+<span class="text-[11px] text-zinc-400 mt-1 block">1 High · 1 Med · 1 Info</span>
+</div>
+<div class="p-3.5 rounded-lg border border-zinc-800/80 bg-zinc-900/40">
+<span class="font-mono text-[11px] text-zinc-500 uppercase tracking-wider block">Berkas Sumber</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-mono text-2xl font-semibold text-white">14</span>
+<span class="font-mono text-xs text-zinc-400">Files</span>
+</div>
+<span class="text-[11px] text-zinc-400 mt-1 block">4 Chunks (842 KB)</span>
+</div>
+<div class="p-3.5 rounded-lg border border-zinc-800/80 bg-zinc-900/40">
+<span class="font-mono text-[11px] text-zinc-500 uppercase tracking-wider block">Kepatuhan Standar</span>
+<div class="flex items-baseline gap-1.5 mt-1 text-amber-400 font-mono">
+<span class="text-base font-semibold">OWASP</span>
+<span class="text-xs">(2 Isu)</span>
+</div>
+<span class="text-[11px] text-emerald-400 mt-1 block flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">check</span> CWE/SANS Compliant
+        </span>
+</div>
+</div>
+<div class="space-y-2">
+<span class="font-mono text-[11px] text-zinc-500 uppercase tracking-wider block">Komponen Terdeteksi</span>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2.5 py-1 rounded border border-zinc-800 bg-zinc-900/60 text-zinc-300 font-mono text-xs">React 18.2</span>
+<span class="px-2.5 py-1 rounded border border-zinc-800 bg-zinc-900/60 text-zinc-300 font-mono text-xs">Vite 4.4</span>
+<span class="px-2.5 py-1 rounded border border-zinc-800 bg-zinc-900/60 text-zinc-300 font-mono text-xs">TailwindCSS</span>
+<span class="px-2.5 py-1 rounded border border-zinc-800 bg-zinc-900/60 text-zinc-300 font-mono text-xs">Node.js 20.x</span>
+<span class="px-2.5 py-1 rounded border border-zinc-800 bg-zinc-900/60 text-zinc-300 font-mono text-xs">OSV 2025.02</span>
+</div>
+</div>
+</div>
+<div class="pt-4 border-t border-zinc-800/60 flex items-center justify-between text-zinc-500 font-mono text-xs">
+<span class="">Engine: Tree-sitter AST &amp; Babel</span>
+<span class="">Zero PII Cloud Retention</span>
+</div>
+</div></div>
+<!-- Filter Category Pills Nav Bar -->
+<div class="w-full flex flex-wrap items-center justify-between gap-3 pt-2"><div class="flex flex-wrap items-center gap-1.5 p-1 rounded-lg border border-zinc-800/80 bg-[#0c0c0c]" id="filter-pills-group">
+<button class="filter-pill active px-3 py-1.5 rounded-md bg-zinc-800 text-white font-medium text-xs transition-colors" data-filter="all">
+    Semua Temuan (4)
+  </button>
+<button class="filter-pill px-3 py-1.5 rounded-md text-zinc-400 hover:text-white font-medium text-xs transition-colors flex items-center gap-1.5" data-filter="critical">
+<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+    Critical (1)
+  </button>
+<button class="filter-pill px-3 py-1.5 rounded-md text-zinc-400 hover:text-white font-medium text-xs transition-colors flex items-center gap-1.5" data-filter="high">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+    High (1)
+  </button>
+<button class="filter-pill px-3 py-1.5 rounded-md text-zinc-400 hover:text-white font-medium text-xs transition-colors flex items-center gap-1.5" data-filter="medium">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+    Medium (1)
+  </button>
+<button class="filter-pill px-3 py-1.5 rounded-md text-zinc-400 hover:text-white font-medium text-xs transition-colors flex items-center gap-1.5" data-filter="info">
+<span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+    Info / Recon (1)
+  </button>
+</div>
+<div class="flex items-center gap-2 text-zinc-500 font-mono text-xs">
+<span class="">Urutkan:</span>
+<span class="text-zinc-300 font-medium">Tingkat Risiko Tertinggi</span>
+</div></div>
+<!-- Progressive Finding Cards Container -->
+<div class="space-y-3" id="findings-container">
+<!-- ================= FINDING 1: CRITICAL SECRET LEAK ================= -->
+<article class="finding-card rounded-xl bg-[#0c0c0c] border border-zinc-800 hover:border-zinc-700/80 p-5 transition-colors" data-category="critical" data-points="25">
+<!-- Card Header -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-zinc-800/80">
+<div class="flex flex-wrap items-center gap-2">
+<!-- Severity Pill -->
+<span class="px-2 py-0.5 rounded border border-rose-500/30 bg-rose-500/10 text-rose-400 font-mono text-xs font-semibold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+              CRITICAL • CVSS 9.1
+            </span>
+<span class="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 font-mono text-xs">CWE-798</span>
+<span class="px-2 py-0.5 rounded border border-zinc-800 bg-black text-zinc-400 font-mono text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-zinc-500">code</span>
+              dist/assets/auth-client.js:312
+            </span>
+</div>
+<!-- Simulation Button (Vercel Style) -->
+<button class="btn-simulate-patch flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-md bg-white hover:bg-zinc-200 text-black font-medium text-xs transition-all flex-shrink-0 border border-transparent shadow-sm" data-finding-id="finding-1">
+<span class="material-symbols-outlined text-[15px]">auto_fix_high</span>
+<span class="btn-text font-semibold">Simulasikan Patch Diterapkan (+25 Skor)</span>
+</button>
+</div>
+<!-- Issue Title -->
+<div class="py-3">
+<h2 class="text-base text-white font-medium">
+            Kebocoran Kunci API OpenAI pada Bundel JavaScript Frontend
+          </h2>
+</div>
+<!-- Vercel Underline Tabs Header -->
+<div class="flex items-center gap-6 border-b border-zinc-800 text-xs overflow-x-auto pb-0">
+<button class="tab-trigger active pb-2 border-b-2 border-white text-white font-medium flex items-center gap-1.5 flex-shrink-0 transition-colors" data-target-tab="tab-f1-1">
+<span class="material-symbols-outlined text-[15px] text-zinc-400">lightbulb</span>
+<span class="">Ringkasan &amp; Alur Risiko</span>
+</button>
+<button class="tab-trigger pb-2 border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 font-medium flex items-center gap-1.5 flex-shrink-0 transition-colors" data-target-tab="tab-f1-2">
+<span class="material-symbols-outlined text-[15px] text-zinc-500">search</span>
+<span class="">Bukti Kode &amp; Entropi</span>
+</button>
+<button class="tab-trigger pb-2 border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 font-medium flex items-center gap-1.5 flex-shrink-0 transition-colors" data-target-tab="tab-f1-3">
+<span class="material-symbols-outlined text-[15px] text-blue-400">code_blocks</span>
+<span class="">Patch Kode AI (Diff)</span>
+</button>
+</div>
+<!-- Tab 1: Ringkasan & Alur Risiko -->
+<div class="tab-pane block space-y-3 pt-3" id="tab-f1-1">
+<p class="text-xs text-zinc-400 leading-relaxed">
+            Kunci rahasia API (Secret Key) dengan kapabilitas pembuatan token model GPT-4 ditemukan tersemat langsung dalam berkas kompilasi bundel JavaScript publik. Siapapun yang mengunjungi situs web ini dapat menginspeksi tab Developer Tools di peramban, menyalin API token, dan menguras kuota kredit atau mengakses riwayat sesi internal organisasi Anda.
+          </p>
+<!-- Attack Flow Sequence Bar -->
+<div class="p-3 rounded-lg border border-zinc-800/80 bg-black/60 space-y-2">
+<span class="font-mono text-[10px] text-zinc-500 uppercase tracking-wider block">Vulnerability Exploit Vector</span>
+<div class="flex flex-col md:flex-row items-start md:items-center gap-2 font-mono text-xs">
+<div class="px-2.5 py-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-300">
+                Frontend Bundle Client (Vite Build)
+              </div>
+<span class="material-symbols-outlined text-zinc-600 rotate-90 md:rotate-0 text-[16px]">arrow_forward</span>
+<div class="px-2.5 py-1 rounded border border-rose-500/30 bg-rose-500/10 text-rose-400">
+                Hardcoded Secret in envConfig
+              </div>
+<span class="material-symbols-outlined text-zinc-600 rotate-90 md:rotate-0 text-[16px]">arrow_forward</span>
+<div class="px-2.5 py-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-300">
+                Publicly Accessible Browser Memory
+              </div>
+</div>
+</div>
+</div>
+<!-- Tab 2: Bukti Kode & Entropi -->
+<div class="tab-pane hidden space-y-3 pt-3" id="tab-f1-2">
+<!-- Shannon Entropy Meter -->
+<div class="p-3 rounded-lg border border-zinc-800/80 bg-black/60 space-y-2">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 font-mono text-xs">
+<span class="text-zinc-500">Shannon Entropy Calculation:</span>
+<span class="text-rose-400 font-medium">4.78 / 8.00 bits (Tingkat Keacakan Sangat Tinggi - Indikasi Token Rahasia)</span>
+</div>
+<!-- Meter Bar -->
+<div class="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+<div class="h-full bg-rose-500 rounded-full" style="width: 59.75%;"></div>
+</div>
+</div>
+<!-- Redacted Code Snippet -->
+<div class="rounded-lg border border-zinc-800 bg-black p-3 font-mono text-xs space-y-2 overflow-x-auto">
+<div class="flex items-center justify-between text-zinc-500 pb-2 border-b border-zinc-800">
+<span class="flex items-center gap-1.5 text-zinc-400">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+                PII Auto-Redaction Filter Aktif
+              </span>
+<span class="text-zinc-600">dist/assets/auth-client.js (Line 312)</span>
+</div>
+<pre class="text-zinc-300 leading-relaxed font-mono"><code><span class="text-zinc-600">311 |</span> export const aiAssistantConfig = {
+<span class="text-zinc-600">312 |</span>   endpoint: "https://api.openai.com/v1/chat/completions",
+<span class="text-zinc-600">313 |</span>   <span class="text-rose-400 bg-rose-950/40 px-1 rounded">apiKey: "sk-proj-****************************9b4e", // [Auto-Redacted by Shannon Entropy Scanner]</span>
+<span class="text-zinc-600">314 |</span>   model: "gpt-4-turbo"
+<span class="text-zinc-600">315 |</span> };</code></pre>
+</div>
+</div>
+<!-- Tab 3: Patch Kode AI (Diff) -->
+<div class="tab-pane hidden space-y-3 pt-3" id="tab-f1-3">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
+<!-- Before Box -->
+<div class="rounded-lg border border-rose-500/20 bg-black p-3 space-y-2">
+<span class="text-rose-400 font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">remove_circle</span> Sebelum (Frontend Terbuka)
+              </span>
+<pre class="text-zinc-300 overflow-x-auto leading-relaxed"><code><span class="text-zinc-500">// Direct client API call with raw token</span>
+const res = await fetch("https://api.openai.com/v1/...", {
+  headers: {
+    Authorization: `Bearer ${OPENAI_KEY}`
+  }
+});</code></pre>
+</div>
+<!-- After Box -->
+<div class="rounded-lg border border-emerald-500/20 bg-black p-3 space-y-2">
+<span class="text-emerald-400 font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">check_circle</span> Rekomendasi Patch (Backend Relay)
+              </span>
+<pre class="text-zinc-300 overflow-x-auto leading-relaxed"><code><span class="text-zinc-500">// Token disimpan aman di environment backend</span>
+const res = await fetch("/api/secure-proxy/ai-chat", {
+  method: "POST",
+  body: JSON.stringify({ prompt })
+});</code></pre>
+</div>
+</div>
+<!-- Bottom Actions inside tab -->
+<div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+<span class="text-zinc-500 font-mono text-xs">Rekomendasi disintesis oleh Aura AI Engine</span>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 rounded-md border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-medium text-xs transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+<span class="">Salin Solusi</span>
+</button>
+<button class="px-3 py-1.5 rounded-md bg-[#0070f3] hover:bg-blue-600 text-white font-medium text-xs transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px]">merge</span>
+<span class="">Terapkan Patch via PR</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+<!-- ================= FINDING 2: HIGH AST TAINT XSS ================= -->
+<article class="finding-card rounded-xl bg-[#0c0c0c] border border-zinc-800 hover:border-zinc-700/80 p-5 transition-colors" data-category="high" data-points="15">
+<!-- Header -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-zinc-800/80">
+<div class="flex flex-wrap items-center gap-2">
+<span class="px-2 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 font-mono text-xs font-semibold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              HIGH • CVSS 7.8
+            </span>
+<span class="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 font-mono text-xs">CWE-79</span>
+<span class="px-2 py-0.5 rounded border border-zinc-800 bg-black text-zinc-400 font-mono text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-zinc-500">code</span>
+              src/components/SearchModal.tsx:48
+            </span>
+</div>
+<button class="btn-simulate-patch flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-md bg-white hover:bg-zinc-200 text-black font-medium text-xs transition-all flex-shrink-0 border border-transparent shadow-sm" data-finding-id="finding-2">
+<span class="material-symbols-outlined text-[15px]">auto_fix_high</span>
+<span class="btn-text font-semibold">Simulasikan Patch Diterapkan (+15 Skor)</span>
+</button>
+</div>
+<div class="py-3">
+<h2 class="text-base text-white font-medium">
+            DOM-Based Cross-Site Scripting (XSS) via AST Taint Analysis
+          </h2>
+</div>
+<!-- Tab Bar -->
+<div class="flex items-center gap-6 border-b border-zinc-800 text-xs overflow-x-auto pb-0">
+<button class="tab-trigger active pb-2 border-b-2 border-white text-white font-medium flex items-center gap-1.5 flex-shrink-0 transition-colors" data-target-tab="tab-f2-1">
+<span class="material-symbols-outlined text-[15px] text-zinc-400">lightbulb</span>
+<span class="">Ringkasan &amp; Alur Risiko</span>
+</button>
+<button class="tab-trigger pb-2 border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 font-medium flex items-center gap-1.5 flex-shrink-0 transition-colors" data-target-tab="tab-f2-2">
+<span class="material-symbols-outlined text-[15px] text-zinc-500">search</span>
+<span class="">Bukti Kode Sink</span>
+</button>
+<button class="tab-trigger pb-2 border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 font-medium flex items-center gap-1.5 flex-shrink-0 transition-colors" data-target-tab="tab-f2-3">
+<span class="material-symbols-outlined text-[15px] text-blue-400">code_blocks</span>
+<span class="">Patch Sanitasi DOMPurify</span>
+</button>
+</div>
+<!-- Tab 1 -->
+<div class="tab-pane block space-y-3 pt-3" id="tab-f2-1">
+<p class="text-xs text-zinc-400 leading-relaxed">
+            Analisis Taint AST melacak masukan pengguna dari URL parameter pencarian yang diteruskan langsung ke atribut <code class="text-amber-400 font-mono">innerHTML</code> tanpa melalui mekanisme pembersihan string (sanitization). Penyerang dapat mengirimkan tautan dengan muatan JavaScript jahat yang mengeksekusi aksi atas nama pengguna korban.
+          </p>
+<div class="p-3 rounded-lg border border-zinc-800/80 bg-black/60 space-y-2">
+<span class="font-mono text-[10px] text-zinc-500 uppercase tracking-wider block">AST Source-to-Sink Taint Pathway</span>
+<div class="flex flex-col md:flex-row items-start md:items-center gap-2 font-mono text-xs">
+<div class="px-2.5 py-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-300">
+                Source: window.location.search
+              </div>
+<span class="material-symbols-outlined text-zinc-600 rotate-90 md:rotate-0 text-[16px]">arrow_forward</span>
+<div class="px-2.5 py-1 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400">
+                Taint Flow: queryParam (Tanpa Sanitasi)
+              </div>
+<span class="material-symbols-outlined text-zinc-600 rotate-90 md:rotate-0 text-[16px]">arrow_forward</span>
+<div class="px-2.5 py-1 rounded border border-zinc-800 bg-zinc-900 text-zinc-300">
+                Dangerous Sink: element.innerHTML
+              </div>
+</div>
+</div>
+</div>
+<!-- Tab 2 -->
+<div class="tab-pane hidden space-y-3 pt-3" id="tab-f2-2">
+<div class="rounded-lg border border-zinc-800 bg-black p-3 font-mono text-xs space-y-2 overflow-x-auto">
+<div class="flex items-center justify-between text-zinc-500 pb-2 border-b border-zinc-800">
+<span class="text-amber-400">AST Taint Node: Identifier 'queryParam'</span>
+<span class="text-zinc-600">SearchModal.tsx (Lines 46-50)</span>
+</div>
+<pre class="text-zinc-300 leading-relaxed"><code><span class="text-zinc-600">46 |</span> const searchParams = new URLSearchParams(window.location.search);
+<span class="text-zinc-600">47 |</span> const query = searchParams.get('q') || '';
+<span class="text-zinc-600">48 |</span> <span class="text-amber-400 bg-amber-950/40 px-1 rounded">resultHeadingRef.current.innerHTML = `Hasil untuk &lt;b&gt;${query}&lt;/b&gt;`; // &lt;-- AST TAINT SINK DETECTED</span>
+<span class="text-zinc-600">49 |</span> renderItems(query);</code></pre>
+</div>
+</div>
+<!-- Tab 3 -->
+<div class="tab-pane hidden space-y-3 pt-3" id="tab-f2-3">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
+<div class="rounded-lg border border-rose-500/20 bg-black p-3 space-y-2">
+<span class="text-rose-400 font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">remove_circle</span> Rentan (Raw innerHTML)
+              </span>
+<pre class="text-zinc-300 overflow-x-auto leading-relaxed"><code>resultHeadingRef.current.innerHTML = 
+  `Hasil untuk &lt;b&gt;${query}&lt;/b&gt;`;</code></pre>
+</div>
+<div class="rounded-lg border border-emerald-500/20 bg-black p-3 space-y-2">
+<span class="text-emerald-400 font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">check_circle</span> Solusi Rekomendasi (DOMPurify)
+              </span>
+<pre class="text-zinc-300 overflow-x-auto leading-relaxed"><code>import DOMPurify from 'dompurify';
+resultHeadingRef.current.innerHTML = 
+  DOMPurify.sanitize(`Hasil untuk &lt;b&gt;${query}&lt;/b&gt;`);</code></pre>
+</div>
+</div>
+<div class="flex items-center justify-end gap-2 pt-1">
+<button class="px-3 py-1.5 rounded-md bg-[#0070f3] hover:bg-blue-600 text-white font-medium text-xs transition-colors">
+              Terapkan Sanitasi Otomatis
+            </button>
+</div>
+</div>
+</article>
+<!-- ================= FINDING 3: MEDIUM OSV LODASH CVE ================= -->
+<article class="finding-card rounded-xl bg-[#0c0c0c] border border-zinc-800 hover:border-zinc-700/80 p-5 transition-colors" data-category="medium" data-points="5">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-zinc-800/80">
+<div class="flex flex-wrap items-center gap-2">
+<span class="px-2 py-0.5 rounded border border-blue-500/30 bg-blue-500/10 text-blue-400 font-mono text-xs font-semibold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              MEDIUM • CVSS 6.2
+            </span>
+<span class="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 font-mono text-xs">CVE-2021-23337</span>
+<span class="px-2 py-0.5 rounded border border-zinc-800 bg-black text-zinc-400 font-mono text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-zinc-500">inventory_2</span>
+              lodash@4.17.20
+            </span>
+</div>
+<button class="btn-simulate-patch flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-md bg-white hover:bg-zinc-200 text-black font-medium text-xs transition-all flex-shrink-0 border border-transparent shadow-sm" data-finding-id="finding-3">
+<span class="material-symbols-outlined text-[15px]">auto_fix_high</span>
+<span class="btn-text font-semibold">Simulasikan Patch Diterapkan (+5 Skor)</span>
+</button>
+</div>
+<div class="py-3">
+<h2 class="text-base text-white font-medium">
+            OSV.dev CVE-2021-23337: Prototype Pollution pada lodash &lt; 4.17.21
+          </h2>
+</div>
+<!-- Tab Bar -->
+<div class="flex items-center gap-6 border-b border-zinc-800 text-xs overflow-x-auto pb-0">
+<button class="tab-trigger active pb-2 border-b-2 border-white text-white font-medium flex items-center gap-1.5 flex-shrink-0 transition-colors" data-target-tab="tab-f3-1">
+<span class="material-symbols-outlined text-[15px] text-zinc-400">lightbulb</span>
+<span class="">Ringkasan &amp; Alur Risiko</span>
+</button>
+<button class="tab-trigger pb-2 border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 font-medium flex items-center gap-1.5 flex-shrink-0 transition-colors" data-target-tab="tab-f3-2">
+<span class="material-symbols-outlined text-[15px] text-zinc-500">search</span>
+<span class="">Bukti package-lock.json</span>
+</button>
+<button class="tab-trigger pb-2 border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 font-medium flex items-center gap-1.5 flex-shrink-0 transition-colors" data-target-tab="tab-f3-3">
+<span class="material-symbols-outlined text-[15px] text-blue-400">code_blocks</span>
+<span class="">Dependensi Upgrade</span>
+</button>
+</div>
+<!-- Tab 1 -->
+<div class="tab-pane block space-y-3 pt-3" id="tab-f3-1">
+<p class="text-xs text-zinc-400 leading-relaxed">
+            Fungsi <code class="text-blue-400 font-mono">template</code> pada pustaka lodash versi di bawah 4.17.21 rentan terhadap Command Injection dan Prototype Pollution melalui opsi variabel payload khusus. Engine mencocokkan hash build dengan database kerentanan terbuka OSV.dev.
+          </p>
+<div class="p-3 rounded-lg border border-zinc-800/80 bg-black/60 flex items-center justify-between font-mono text-xs">
+<span class="text-zinc-500">OSV.dev Reachability Trace:</span>
+<span class="text-zinc-300">Direct Transitive Dependency in node_modules</span>
+</div>
+</div>
+<!-- Tab 2 -->
+<div class="tab-pane hidden space-y-3 pt-3" id="tab-f3-2">
+<div class="rounded-lg border border-zinc-800 bg-black p-3 font-mono text-xs space-y-2 overflow-x-auto">
+<pre class="text-zinc-300 leading-relaxed"><code><span class="text-zinc-600">"node_modules/lodash": {</span>
+  <span class="text-zinc-600">"version":</span> <span class="text-amber-400">"4.17.20"</span>,
+  <span class="text-zinc-600">"resolved":</span> "https://registry.npmjs.org/lodash/-/lodash-4.17.20.tgz",
+  <span class="text-zinc-600">"integrity":</span> "sha512-Pl/..."
+<span class="text-zinc-600">}</span></code></pre>
+</div>
+</div>
+<!-- Tab 3 -->
+<div class="tab-pane hidden space-y-3 pt-3" id="tab-f3-3">
+<div class="rounded-lg border border-zinc-800 bg-black p-3 space-y-2 font-mono text-xs">
+<div class="flex items-center justify-between text-zinc-500">
+<span class="">Rekomendasi Perintah Shell</span>
+<span class="text-emerald-400">Non-Breaking SemVer Patch</span>
+</div>
+<div class="p-2.5 rounded border border-zinc-800 bg-zinc-900 text-zinc-200 flex items-center justify-between">
+<code>npm install lodash@^4.17.21 --save-exact</code>
+<button class="text-zinc-400 hover:text-white flex items-center gap-1 text-xs">
+<span class="material-symbols-outlined text-[15px]">content_copy</span> Salin
+              </button>
+</div>
+</div>
+</div>
+</article>
+<!-- ================= FINDING 4: INFO RECON ================= -->
+<article class="finding-card rounded-xl bg-[#0c0c0c] border border-zinc-800 hover:border-zinc-700/80 p-5 transition-colors" data-category="info" data-points="0">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-zinc-800/80">
+<div class="flex flex-wrap items-center gap-2">
+<span class="px-2 py-0.5 rounded border border-zinc-700 bg-zinc-800/50 text-zinc-300 font-mono text-xs font-semibold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+              INFO / RECON
+            </span>
+<span class="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 font-mono text-xs">Recon Exposure</span>
+<span class="px-2 py-0.5 rounded border border-zinc-800 bg-black text-zinc-400 font-mono text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-zinc-500">terminal</span>
+              main.bundle.js
+            </span>
+</div>
+<span class="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900/60 text-zinc-500 font-mono text-xs">
+            Informasi Telemetri (0 Poin Penalti)
+          </span>
+</div>
+<div class="py-3">
+<h2 class="text-base text-white font-medium">
+            Email Internal &amp; Endpoint Staging Terpapar pada JavaScript Recon
+          </h2>
+</div>
+<!-- Tab Bar -->
+<div class="flex items-center gap-6 border-b border-zinc-800 text-xs overflow-x-auto pb-0">
+<button class="tab-trigger active pb-2 border-b-2 border-white text-white font-medium flex items-center gap-1.5 flex-shrink-0 transition-colors" data-target-tab="tab-f4-1">
+<span class="material-symbols-outlined text-[15px] text-zinc-400">lightbulb</span>
+<span class="">Ringkasan &amp; Daftar Artefak</span>
+</button>
+<button class="tab-trigger pb-2 border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 font-medium flex items-center gap-1.5 flex-shrink-0 transition-colors" data-target-tab="tab-f4-2">
+<span class="material-symbols-outlined text-[15px] text-zinc-500">search</span>
+<span class="">Endpoint Terdeteksi</span>
+</button>
+</div>
+<!-- Tab 1 -->
+<div class="tab-pane block space-y-3 pt-3" id="tab-f4-1">
+<p class="text-xs text-zinc-400 leading-relaxed">
+            Ekstraksi regex heuristic menemukan beberapa alamat email staf pengembang dan URL staging internal dalam komentar bundel produksi. Meskipun bukan lubang keamanan langsung (Zero-Day), informasi ini dapat dipakai penyerang untuk menyusun serangan spear-phishing berbobot tinggi.
+          </p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
+<div class="p-3 rounded-lg border border-zinc-800/80 bg-black/60 space-y-1">
+<span class="text-zinc-500">Email Terpapar (Tersensor Otomatis):</span>
+<ul class="text-zinc-300 space-y-1">
+<li class="">• dev-t***@startupkamu.id</li>
+<li class="">• sec-al***@fintech.io</li>
+</ul>
+</div>
+<div class="p-3 rounded-lg border border-zinc-800/80 bg-black/60 space-y-1">
+<span class="text-zinc-500">Server Header Status:</span>
+<p class="text-zinc-300">X-Powered-By: Express (Disarankan dinonaktifkan)</p>
+</div>
+</div>
+</div>
+<!-- Tab 2 -->
+<div class="tab-pane hidden space-y-3 pt-3" id="tab-f4-2">
+<div class="rounded-lg border border-zinc-800 bg-black p-3 font-mono text-xs space-y-1.5 overflow-x-auto">
+<div class="text-zinc-500 pb-1">Unauthenticated Internal Endpoints Discovered:</div>
+<div class="text-zinc-300 font-mono">1. https://staging-internal.fintech.io/healthz</div>
+<div class="text-zinc-300 font-mono">2. https://api-dev.auraglass.io/v1/metrics/prometheus</div>
+<div class="text-zinc-300 font-mono">3. /api/debug/session-dump</div>
+</div>
+</div>
+</article>
+</div>
+<!-- Notification Toast Container for Interactive Simulation -->
+<div class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none" id="toast-simulator">
+<div class="px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700/80 shadow-2xl flex items-center gap-3">
+<span class="material-symbols-outlined text-emerald-400 text-[20px]">check_circle</span>
+<div class="flex flex-col">
+<span class="text-xs font-medium text-white" id="toast-title">Patch Berhasil Disimulasikan</span>
+<span class="font-mono text-[11px] text-zinc-400" id="toast-desc">Skor dinaikkan secara real-time.</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function initAuditSimulator() {
+    // Current simulation state
+    const simulationState = {
+      baseScore: 55,
+      currentScore: 55,
+      patchedFindings: new Set(),
+      findingPoints: {
+        'finding-1': 25,
+        'finding-2': 15,
+        'finding-3': 5
+      }
+    };
+
+    const scoreCounter = document.getElementById('score-counter-val');
+    const scoreCircle = document.getElementById('score-ring-circle');
+    const gradeBadge = document.getElementById('grade-badge');
+    const gradeStatusDesc = document.getElementById('grade-status-desc');
+    const simPointsLabel = document.getElementById('sim-points-label');
+    const resetBtn = document.getElementById('btn-reset-sim');
+    const toast = document.getElementById('toast-simulator');
+    const toastTitle = document.getElementById('toast-title');
+    const toastDesc = document.getElementById('toast-desc');
+
+    const totalCircumference = 314.159;
+
+    function showToast(title, desc) {
+      if (!toast) return;
+      toastTitle.textContent = title;
+      toastDesc.textContent = desc;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3500);
+    }
+
+    function updateScoreDisplay(score) {
+      if (scoreCounter) scoreCounter.textContent = score;
+
+      // Update ring offset: dashoffset = circumference * (1 - score / 100)
+      const offset = totalCircumference * (1 - (score / 100));
+      if (scoreCircle) {
+        scoreCircle.style.strokeDashoffset = offset;
+      }
+
+      // Update Grade Badge and colors (Vercel strict palette)
+      if (score >= 95) {
+        gradeBadge.textContent = 'Grade A';
+        gradeBadge.className = 'px-2.5 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-mono text-xs font-semibold uppercase tracking-wide transition-colors';
+        gradeStatusDesc.textContent = 'Sistem Terproteksi Tangguh';
+        scoreCircle.className = 'text-emerald-500 transition-all duration-700 ease-out';
+      } else if (score >= 80) {
+        gradeBadge.textContent = 'Grade B';
+        gradeBadge.className = 'px-2.5 py-0.5 rounded border border-blue-500/30 bg-blue-500/10 text-blue-400 font-mono text-xs font-semibold uppercase tracking-wide transition-colors';
+        gradeStatusDesc.textContent = 'Risiko Rendah Terkendali';
+        scoreCircle.className = 'text-[#0070f3] transition-all duration-700 ease-out';
+      } else if (score >= 70) {
+        gradeBadge.textContent = 'Grade C';
+        gradeBadge.className = 'px-2.5 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 font-mono text-xs font-semibold uppercase tracking-wide transition-colors';
+        gradeStatusDesc.textContent = 'Perhatian Diperlukan';
+        scoreCircle.className = 'text-amber-500 transition-all duration-700 ease-out';
+      } else {
+        gradeBadge.textContent = 'Grade D';
+        gradeBadge.className = 'px-2.5 py-0.5 rounded border border-rose-500/30 bg-rose-500/10 text-rose-400 font-mono text-xs font-semibold uppercase tracking-wide transition-colors';
+        gradeStatusDesc.textContent = 'Rentan Eksploitasi';
+        scoreCircle.className = 'text-rose-500 transition-all duration-700 ease-out';
+      }
+
+      const remainingPotential = 100 - score;
+      if (simPointsLabel) {
+        if (remainingPotential > 0) {
+          simPointsLabel.textContent = `+${remainingPotential} Poin Potensial`;
+        } else {
+          simPointsLabel.textContent = `Skor Maksimum Tercapai (100/100)`;
+        }
+      }
+    }
+
+    // Attach listener to simulation buttons
+    const simButtons = document.querySelectorAll('.btn-simulate-patch');
+    simButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const findingId = btn.getAttribute('data-finding-id');
+        const points = simulationState.findingPoints[findingId] || 0;
+        const btnText = btn.querySelector('.btn-text');
+
+        if (!simulationState.patchedFindings.has(findingId)) {
+          // Apply patch
+          simulationState.patchedFindings.add(findingId);
+          simulationState.currentScore = Math.min(100, simulationState.currentScore + points);
+          btn.classList.remove('bg-white', 'text-black', 'hover:bg-zinc-200');
+          btn.classList.add('bg-zinc-900', 'text-emerald-400', 'border-emerald-500/30');
+          if (btnText) btnText.textContent = '✓ Simulasi Terpasang';
+          showToast(`Patch Simulasi Aktif (+${points} Poin)`, `Skor kesehatan meningkat menjadi ${simulationState.currentScore}/100`);
+        } else {
+          // Revert patch
+          simulationState.patchedFindings.delete(findingId);
+          simulationState.currentScore = Math.max(55, simulationState.currentScore - points);
+          btn.classList.add('bg-white', 'text-black', 'hover:bg-zinc-200');
+          btn.classList.remove('bg-zinc-900', 'text-emerald-400', 'border-emerald-500/30');
+          if (btnText) btnText.textContent = `Simulasikan Patch Diterapkan (+${points} Skor)`;
+          showToast(`Patch Dibatalkan (-${points} Poin)`, `Skor kembali ke ${simulationState.currentScore}/100`);
+        }
+
+        updateScoreDisplay(simulationState.currentScore);
+      });
+    });
+
+    // Reset Simulation Button
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        simulationState.currentScore = simulationState.baseScore;
+        simulationState.patchedFindings.clear();
+        simButtons.forEach(btn => {
+          const findingId = btn.getAttribute('data-finding-id');
+          const points = simulationState.findingPoints[findingId] || 0;
+          const btnText = btn.querySelector('.btn-text');
+          btn.classList.add('bg-white', 'text-black', 'hover:bg-zinc-200');
+          btn.classList.remove('bg-zinc-900', 'text-emerald-400', 'border-emerald-500/30');
+          if (btnText) btnText.textContent = `Simulasikan Patch Diterapkan (+${points} Skor)`;
+        });
+        updateScoreDisplay(simulationState.baseScore);
+        showToast('Simulasi Direset', 'Skor dikembalikan ke pembacaan awal 55/100.');
+      });
+    }
+
+    // 3-Tab Anatomy Controller inside each finding card (Vercel Underline Tabs)
+    document.querySelectorAll('.finding-card').forEach(card => {
+      const tabTriggers = card.querySelectorAll('.tab-trigger');
+      const tabPanes = card.querySelectorAll('.tab-pane');
+
+      tabTriggers.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.getAttribute('data-target-tab');
+          tabTriggers.forEach(t => {
+            t.classList.remove('active', 'border-white', 'text-white');
+            t.classList.add('border-transparent', 'text-zinc-400');
+          });
+          btn.classList.add('active', 'border-white', 'text-white');
+          btn.classList.remove('border-transparent', 'text-zinc-400');
+
+          tabPanes.forEach(pane => {
+            if (pane.id === targetId) {
+              pane.classList.remove('hidden');
+              pane.classList.add('block');
+            } else {
+              pane.classList.remove('block');
+              pane.classList.add('hidden');
+            }
+          });
+        });
+      });
+    });
+
+    // Category Filter Pills
+    const filterPills = document.querySelectorAll('.filter-pill');
+    const findingCards = document.querySelectorAll('.finding-card');
+
+    filterPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        filterPills.forEach(p => {
+          p.classList.remove('active', 'bg-zinc-800', 'text-white');
+          p.classList.add('text-zinc-400');
+        });
+        pill.classList.add('active', 'bg-zinc-800', 'text-white');
+        pill.classList.remove('text-zinc-400');
+
+        const filter = pill.getAttribute('data-filter');
+        findingCards.forEach(card => {
+          const category = card.getAttribute('data-category');
+          if (filter === 'all' || category === filter) {
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // Utility feedback buttons
+    const exportPdf = document.getElementById('btn-export-pdf');
+    if (exportPdf) {
+      exportPdf.addEventListener('click', () => {
+        showToast('Membuat Dokumen PDF...', 'Laporan formal terverifikasi SHA-256 sedang diunduh.');
+      });
+    }
+
+    const shareBtn = document.getElementById('btn-share-link');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        navigator.clipboard?.writeText(window.location.href);
+        showToast('Tautan Disalin ke Clipboard', 'Tautan laporan enkripsi sementara berlaku 7 hari.');
+      });
+    }
+
+    const reAuditBtn = document.getElementById('btn-re-audit');
+    if (reAuditBtn) {
+      reAuditBtn.addEventListener('click', () => {
+        showToast('Menginisiasi Audit Baru', 'Menghubungkan ke AST Runner & Telemetri...');
+      });
+    }
+
+  })();
+</script></main><footer class="w-full border-t border-zinc-800/60 py-5 bg-black mt-16"><div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono text-zinc-500"><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="text-zinc-300">All systems operational</span><span class="text-zinc-700">·</span><span class="">Cluster latency 14ms</span></div><div class="flex items-center gap-4 text-zinc-500"><a class="hover:text-zinc-300 transition-colors" href="#">Documentation</a><a class="hover:text-zinc-300 transition-colors" href="#">API</a><a class="hover:text-zinc-300 transition-colors" href="#">Security</a><span class="">© 2025 Geist Sec</span></div></div></footer>
+
+</body></html>

@@ -1,0 +1,47 @@
+# ==============================================================================
+# SecAudit / Aura Glass - Backend Git Ignore Rules
+# ==============================================================================
+
+# Python bytecode & runtime cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Testing & Coverage reports
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment files & secret keys (Never commit operational secrets)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Local SQLite databases & journals
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+secaudit.db
+
+# Storage, logs & temporary data
+*.log
+data/
+uploads/
+reports/
+
+# OS and IDE configuration
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

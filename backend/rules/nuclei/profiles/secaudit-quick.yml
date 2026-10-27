@@ -1,0 +1,19 @@
+# SecAudit Quick Scan Profile
+# Mode Cepat: Fokus pada miskonfigurasi fatal, exposed secrets & git, serta subdomain takeover
+# Estimasi Durasi: 15-45 detik
+
+templates:
+  - 01-sensitive-exposures/environment-secrets
+  - 01-sensitive-exposures/version-control-git
+  - 01-sensitive-exposures/sourcemaps-and-ide
+  - 02-misconfigurations/headers-and-cors
+  - 02-misconfigurations/debug-and-info-leaks
+  - 03-often-overlooked/takeovers
+
+severity:
+  - critical
+  - high
+  - medium
+  - low
+
+stop-at-first-match: false

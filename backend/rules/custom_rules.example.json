@@ -1,0 +1,46 @@
+{
+  "_comment": "Template untuk menambahkan ports, CVE, dan sensitive paths kustom tanpa mengubah kode backend. Salin berkas ini ke 'custom_rules.json' di direktori yang sama.",
+  "additional_ports": [
+    [8081, "Custom Microservice", "MEDIUM"],
+    [9000, "Portainer / PHP-FPM", "HIGH"],
+    [2376, "Docker Daemon TLS", "LOW"]
+  ],
+  "additional_sensitive_paths": [
+    ["/admin/login", "Admin Interface", "HIGH", "Panel login administrator terekspos ke publik."],
+    ["/api/v1/internal", "Internal API", "HIGH", "Rute API internal tanpa proteksi gateway."],
+    ["/storage/logs/laravel.log", "Framework Log", "HIGH", "Berkas log aplikasi Laravel terekspos."],
+    ["/config/databases.yml", "Config & Rahasia", "CRITICAL", "Konfigurasi kredensial database YAML terekspos."]
+  ],
+  "additional_cves": [
+    {
+      "component": "log4j",
+      "pattern": "log4j[/-]?([0-9.]+)",
+      "vulnerable_versions": ["2.14.1", "2.14.0", "2.13.0"],
+      "cve": "CVE-2021-44228",
+      "cvss": 10.0,
+      "severity": "CRITICAL",
+      "title": "Apache Log4j Remote Code Execution (Log4Shell)",
+      "detail": "JNDI lookup injection memungkinkan eksekusi kode jarak jauh tanpa autentikasi."
+    },
+    {
+      "component": "spring",
+      "pattern": "spring[/-]?([0-9.]+)",
+      "vulnerable_versions": ["5.3.17", "5.2.19"],
+      "cve": "CVE-2022-22965",
+      "cvss": 9.8,
+      "severity": "CRITICAL",
+      "title": "Spring Framework RCE (Spring4Shell)",
+      "detail": "Data binding injection melalui ClassLoader memungkinkan RCE pada server Tomcat."
+    }
+  ],
+  "additional_security_headers": {
+    "cross-origin-opener-policy": {
+      "rule_id": "HTTP-MISSING-COOP",
+      "severity": "LOW",
+      "title": "Header Cross-Origin-Opener-Policy Tidak Dikonfigurasi",
+      "cwe_id": "CWE-1021",
+      "cvss_score": 2.5,
+      "detail": "Membantu mengisolasi dokumen tingkat atas dari dokumen lintas-asal."
+    }
+  }
+}

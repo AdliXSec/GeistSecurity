@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><title>Geist Security — Smart Launchpad v2.4</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>
+  @layer base {
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #000000;
+      color: #ededed;
+      font-family: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      overscroll-behavior: none;
+    }
+  }
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  .vercel-grid {
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse 65% 55% at 50% 15%, #000 60%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 15%, #000 60%, transparent 100%);
+  }
+</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        background: "#000000",
+        surface: "#09090b",
+        "surface-raised": "#121214",
+        border: "#27272a"
+      },
+      fontFamily: {
+        sans: ["Geist", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        mono: ["JetBrains Mono", "monospace"]
+      }
+    }
+  }
+};
+</script></head><body class="bg-black font-sans text-[#ededed] antialiased min-h-screen relative selection:bg-zinc-800 selection:text-white"><!-- Vercel Precision Subtle Grid -->
+<div class="pointer-events-none fixed inset-0 z-0 vercel-grid opacity-60"></div>
+<header class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-zinc-800/80"><div class="h-16 max-w-7xl mx-auto px-6 flex items-center justify-between"><div class="flex items-center gap-4 flex-shrink-0"><a class="flex items-center gap-2.5 text-white hover:opacity-90 transition-opacity" href="#"><svg class="h-6 w-6 text-white fill-current" viewbox="0 0 24 24"><path d="M12 2L2 19.5h20L12 2z"></path></svg><div class="flex flex-col"><div class="flex items-center gap-2"><span class="text-sm font-semibold tracking-tight text-white">Geist Security</span><span class="px-1.5 py-0.2 rounded border border-zinc-800 bg-zinc-900 font-mono text-[10px] text-zinc-400">v2.4</span></div></div></a></div><nav class="hidden md:flex items-center gap-1 p-1 rounded-full border border-zinc-800/80 bg-zinc-950/60 backdrop-blur text-xs"><a aria-current="page" class="px-3.5 py-1.5 rounded-full transition-all bg-zinc-800 text-white font-medium" data-path="smart-launchpad" href="#">Smart Launchpad</a><a class="px-3.5 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900 transition-all font-medium" data-path="storyteller-sse" href="#">Storyteller SSE</a><a class="px-3.5 py-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-900 transition-all font-medium" data-path="bento-report-simulator" href="#">Bento Report &amp; Simulator</a></nav><div class="flex items-center gap-3 flex-shrink-0"><div class="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-md border border-zinc-800/80 bg-zinc-900/60 font-mono text-[11px] text-zinc-400"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]"></span><span>Verified Ownership</span></div><div class="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-md border border-zinc-800/80 bg-zinc-900/60 font-mono text-[11px] text-zinc-400"><span class="relative flex h-1.5 w-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0070f3] opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#0070f3]"></span></span><span>OSV.dev Active</span></div><a class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-white text-black font-medium text-xs hover:bg-zinc-200 transition-all shadow-sm" data-path="smart-launchpad" href="#"><span class="material-symbols-outlined text-[15px]">add</span><span>New Audit</span></a><div class="w-7 h-7 rounded-full border border-zinc-700 bg-zinc-900 flex items-center justify-center text-zinc-300"><span class="material-symbols-outlined text-[15px]">person</span></div></div></div></header><main class="relative z-10 w-full pt-24 min-h-[calc(100vh-140px)]"><div class="flex flex-col w-full max-w-6xl mx-auto px-4 sm:px-6">
+<!-- Hero Header Unit (Vercel Style) -->
+<div class="relative z-10 max-w-3xl mx-auto flex flex-col items-center text-center mt-6 mb-10"><div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-950 hover:border-zinc-700 transition-all cursor-pointer group mb-8"><span class="flex h-2 w-2 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0070f3] opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-[#0070f3]"></span></span><span class="font-mono text-xs text-zinc-300 tracking-tight">Geist Engine v2.4 Live</span><span class="text-zinc-600">•</span><span class="text-xs text-zinc-400 flex items-center gap-1 group-hover:text-white transition-colors">Autonomous Security Audit Launchpad<span class="material-symbols-outlined text-[13px] transition-transform group-hover:translate-x-0.5">arrow_forward</span></span></div><h1 class="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white max-w-4xl mb-6">Audit Keamanan Web &amp; Kode dalam <span class="bg-gradient-to-b from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">Hitungan Detik</span></h1><p class="text-base sm:text-lg text-zinc-400 max-w-2xl mb-8 leading-relaxed font-normal">Pemeriksaan menyeluruh via <span class="font-mono text-zinc-200 text-xs px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800">Blackbox URL</span>, <span class="font-mono text-zinc-200 text-xs px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800">Whitebox GitHub</span>, atau mode gabungan bertenaga AST Taint XSS, OSV.dev, dan Shannon Entropy detector.</p><div class="flex flex-wrap items-center justify-center gap-6 font-mono text-xs text-zinc-500 mb-6"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-zinc-400">verified</span><span class="text-zinc-400">Threat DB: 231,904 CVEs</span></div><span class="text-zinc-700">•</span><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-zinc-400">bolt</span><span class="text-zinc-400">Sub-140ms Refactor Cycles</span></div><span class="text-zinc-700">•</span><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-zinc-400">shield</span><span class="text-zinc-400">Deterministic AST Synthesis</span></div></div></div>
+<!-- Main Launchpad Card (Vercel Style Clean Box) -->
+<div class="relative z-10 max-w-3xl w-full mx-auto rounded-xl bg-zinc-950 border border-zinc-800 shadow-2xl p-6 sm:p-8"><div class="h-9 bg-zinc-900/70 border-b border-zinc-800/80 -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 px-4 flex items-center justify-between rounded-t-xl"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span><span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span><span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span><span class="font-mono text-xs text-zinc-400 ml-3 flex items-center gap-1.5"><span class="material-symbols-outlined text-[12px]">lock</span>geist-security://smart-launchpad.session</span></div><div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded border border-[#0070f3]/30 bg-[#0070f3]/10 font-mono text-[10px] text-[#0070f3] font-medium tracking-wide">READY TO AUDIT</span><span class="material-symbols-outlined text-zinc-500 text-[15px]">terminal</span></div></div><div class="flex items-center justify-center mb-6"><div class="inline-flex p-1 rounded-lg bg-black border border-zinc-800/90 gap-1" id="modeSelector"><button class="mode-pill-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-medium bg-zinc-800/90 text-white border border-zinc-700/60 shadow-sm transition-all" data-mode="hybrid" type="button"><span class="material-symbols-outlined text-[16px]">auto_fix_high</span><span>Hybrid (URL + GitHub)</span></button><button class="mode-pill-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-all" data-mode="url" type="button"><span class="material-symbols-outlined text-[16px]">language</span><span>Website URL (Blackbox)</span></button><button class="mode-pill-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-all" data-mode="github" type="button"><span class="material-symbols-outlined text-[16px]">folder_code</span><span>GitHub Repo (Whitebox)</span></button></div></div><form class="flex flex-col gap-4" id="launchpadForm" onsubmit="event.preventDefault(); triggerAuditRun();"><div class="flex flex-col gap-1.5 transition-all duration-200" id="targetUrlContainer"><div class="flex items-center justify-between text-xs"><label class="text-zinc-300 font-medium flex items-center gap-1.5"><span class="material-symbols-outlined text-zinc-400 text-[14px]">public</span>Target Web URL (Runtime / DAST)</label><div class="flex items-center gap-1.5 text-zinc-400 font-mono text-[11px]"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Domain Terverifikasi Otomatis (Demo)</div></div><div class="relative flex items-center"><div class="absolute left-3 text-zinc-500 flex items-center pointer-events-none"><span class="material-symbols-outlined text-[16px]">link</span></div><input class="w-full bg-black border border-zinc-800 focus:border-zinc-500 focus:ring-0 text-white rounded-lg pl-9 pr-24 py-2.5 font-mono text-sm placeholder:text-zinc-600 transition-colors" id="inputTargetUrl" placeholder="https://app.startup.com" required="" type="url" value="https://demo-fintech.auraglass.io"/><div class="absolute right-2.5 flex items-center gap-1.5"><span class="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono text-[10px]">HTTPS</span><button class="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors" onclick="pingTargetUrl()" title="Ping Check Latency" type="button"><span class="material-symbols-outlined text-[15px]">network_check</span></button></div></div></div><div class="flex flex-col gap-1.5 transition-all duration-200" id="targetGithubContainer"><div class="flex items-center justify-between text-xs"><label class="text-zinc-300 font-medium flex items-center gap-1.5"><span class="material-symbols-outlined text-zinc-400 text-[14px]">commit</span>GitHub Repository (Source / SAST)</label><div class="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400"><span>Access:</span><span class="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300">Read-Only PAT</span></div></div><div class="relative flex items-center"><div class="absolute left-3 text-zinc-500 flex items-center pointer-events-none"><span class="material-symbols-outlined text-[16px]">account_tree</span></div><input class="w-full bg-black border border-zinc-800 focus:border-zinc-500 focus:ring-0 text-white rounded-lg pl-9 pr-36 py-2.5 font-mono text-sm placeholder:text-zinc-600 transition-colors" id="inputTargetRepo" placeholder="owner/repository-name" required="" type="text" value="auraglass-labs/fintech-dashboard-api"/><div class="absolute right-2.5 flex items-center gap-1.5"><div class="flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-[11px] cursor-pointer hover:border-zinc-700 transition-colors"><span class="material-symbols-outlined text-[12px] text-zinc-400">alt_route</span><span id="currentBranchLabel">main</span></div><span class="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono text-[10px]">public</span></div></div></div><div class="flex flex-col gap-2 mt-1"><div class="flex items-center justify-between"><span class="text-[11px] font-mono uppercase tracking-wider text-zinc-400 flex items-center gap-1.5"><span class="material-symbols-outlined text-[13px] text-zinc-400">electric_bolt</span>Presets Cepat 1-Klik</span><span class="font-mono text-[11px] text-zinc-500">Klik untuk memuat target</span></div><div class="grid grid-cols-1 sm:grid-cols-3 gap-2"><button class="preset-card group text-left p-3 rounded-lg border border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 hover:bg-zinc-900/40 transition-all flex flex-col gap-1" onclick="applyPreset('https://demo-shop.auraglass.io', 'auraglass-labs/umkm-storefront-ast', '🛒 Demo Toko UMKM (AST XSS + Leaked Secret)', 'hybrid')" type="button"><div class="flex items-center justify-between"><span class="text-xs font-medium text-zinc-200 group-hover:text-white transition-colors">🛒 Toko UMKM Modern</span><span class="material-symbols-outlined text-[14px] text-zinc-500 group-hover:text-zinc-300 transition-transform group-hover:translate-x-0.5">arrow_outward</span></div><p class="font-mono text-[11px] text-zinc-500">AST DOM XSS • JWT Token</p></button><button class="preset-card group text-left p-3 rounded-lg border border-zinc-700/80 bg-zinc-900/50 hover:border-zinc-500 transition-all flex flex-col gap-1" onclick="applyPreset('https://demo-fintech.auraglass.io', 'auraglass-labs/fintech-dashboard-api', '💳 SaaS Fintech Dashboard (CVE-2023 OSV + Shannon Entropy)', 'hybrid')" type="button"><div class="flex items-center justify-between"><span class="text-xs font-medium text-white transition-colors">💳 SaaS Fintech Core</span><span class="material-symbols-outlined text-[14px] text-zinc-400 group-hover:text-white transition-transform group-hover:translate-x-0.5">arrow_outward</span></div><p class="font-mono text-[11px] text-zinc-400">OSV CVE Reachability • Shannon 8.1</p></button><button class="preset-card group text-left p-3 rounded-lg border border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 hover:bg-zinc-900/40 transition-all flex flex-col gap-1" onclick="applyPreset('https://gateway.auraglass.io', 'auraglass-labs/edge-gateway-nextjs', '⚡ Next.js API Gateway (Public Route Exposure)', 'url')" type="button"><div class="flex items-center justify-between"><span class="text-xs font-medium text-zinc-200 group-hover:text-white transition-colors">⚡ Edge API Gateway</span><span class="material-symbols-outlined text-[14px] text-zinc-500 group-hover:text-zinc-300 transition-transform group-hover:translate-x-0.5">arrow_outward</span></div><p class="font-mono text-[11px] text-zinc-500">Next.js Injection • Open CORS</p></button></div></div><div class="p-3 rounded-lg border border-zinc-800/80 bg-black/60 flex flex-col gap-2"><div class="flex items-center justify-between"><span class="text-[11px] font-mono uppercase tracking-wider text-zinc-500">Modul Telemetri Aktif Otomatis</span><span class="font-mono text-[11px] text-zinc-400">Zero Configuration Required</span></div><div class="flex flex-wrap items-center gap-1.5 font-mono text-xs"><div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-300"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span>AST XSS Tracer (Source-to-Sink)</span></div><div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-300"><span class="h-1.5 w-1.5 rounded-full bg-[#0070f3]"></span><span>OSV.dev CVE Reachability</span></div><div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-300"><span class="h-1.5 w-1.5 rounded-full bg-zinc-400"></span><span>JS Secret &amp; Recon (Entropy 8.0)</span></div><div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-300"><span class="material-symbols-outlined text-[13px] text-zinc-400">verified_user</span><span>Mandatory Auto-Redaction</span></div></div></div><div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2"><button class="flex items-center gap-1.5 px-3 py-2 rounded-md border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-900 text-zinc-300 hover:text-white text-xs font-medium transition-all w-full sm:w-auto justify-center" onclick="toggleAdvancedConfig()" type="button"><span class="material-symbols-outlined text-[15px]">tune</span><span>Konfigurasi Lanjutan</span><span class="material-symbols-outlined text-[15px] transition-transform" id="advChevron">expand_more</span></button><button class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md bg-white text-black hover:bg-zinc-200 font-semibold text-sm shadow-sm transition-all active:scale-[0.99] w-full sm:w-auto" id="launchAuditBtn" type="submit"><span class="material-symbols-outlined text-[18px]">play_arrow</span><span id="btnLabel">Mulai Deep Security Audit (Hybrid)</span></button></div><div class="hidden flex-col gap-4 mt-2 pt-4 border-t border-zinc-800/80" id="advancedConfigPanel"><div class="flex items-center justify-between"><span class="text-xs font-semibold text-white">Parameter Audit Khusus</span><span class="font-mono text-[11px] text-zinc-500">Konfigurasi Opsional</span></div><div class="grid grid-cols-1 md:grid-cols-3 gap-3"><div class="flex flex-col gap-1"><label class="text-xs text-zinc-400">Max Crawl Depth</label><select class="px-2.5 py-2 rounded-md bg-black border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-zinc-600 focus:outline-none"><option value="3">Depth 3 (Rekomendasi Cepat - 45s)</option><option value="5">Depth 5 (Full Single Page App)</option><option value="1">Depth 1 (Halaman Depan Saja)</option></select></div><div class="flex flex-col gap-1"><label class="text-xs text-zinc-400">Tingkat Penetrasi (Rate Limit)</label><select class="px-2.5 py-2 rounded-md bg-black border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-zinc-600 focus:outline-none"><option value="gentle">Gentle (5 req/sec - Zero Disrupt)</option><option selected="" value="moderate">Moderate (20 req/sec)</option><option value="stress">High Stress (Sandbox Env)</option></select></div><div class="flex flex-col gap-1"><label class="text-xs text-zinc-400">Heuristic Taint Level</label><select class="px-2.5 py-2 rounded-md bg-black border border-zinc-800 text-zinc-200 font-mono text-xs focus:border-zinc-600 focus:outline-none"><option selected="" value="strict">Strict (CWE-79 DOM Sink &amp; Eval)</option><option value="permissive">Permissive (All Unsanitized)</option></select></div></div><div class="flex items-center gap-2 pt-1"><input checked="" class="rounded bg-black border-zinc-800 text-zinc-200 focus:ring-0" id="maskSensitive" type="checkbox"/><label class="text-xs text-zinc-400" for="maskSensitive">Enforce PII &amp; Authorization Token Masking pada Live Terminal Log (Standar Keamanan ISO 27001)</label></div></div></form></div>
+<!-- Live Execution Status Bar -->
+<div class="hidden max-w-3xl w-full mx-auto mt-4 p-4 rounded-xl bg-zinc-950 border border-zinc-800 shadow-lg" id="scanStatusBanner">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+</div>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-white" id="auditStatusTitle">Menginisialisasi AST Engine &amp; Sambungan Target...</span>
+<span class="font-mono text-[11px] text-zinc-400" id="auditStatusSubtitle">Mengirim payload handshake awal ke Storyteller SSE stream</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-28 bg-zinc-900 border border-zinc-800 rounded-full h-1.5 overflow-hidden hidden sm:block">
+<div class="bg-white h-1.5 rounded-full transition-all duration-300 w-1/4" id="auditProgressBar"></div>
+</div>
+<a class="px-3 py-1.5 rounded-md bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 text-white text-xs font-medium flex items-center gap-1 transition-all" data-path="storyteller-sse" href="#">
+<span>Storyteller</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Bento Feature Showcase Grid (Vercel Style) -->
+<div class="relative z-10 max-w-5xl mx-auto mt-16"><div class="text-center max-w-2xl mx-auto mb-12"><div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/60 text-zinc-300 font-mono text-xs uppercase tracking-wider mb-4"><span class="material-symbols-outlined text-[14px] text-zinc-400">category</span><span>Built for teams</span></div><h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-3">Mengapa Geist Security Berbeda dari Scanner Konvensional?</h2><p class="text-zinc-400 text-base leading-relaxed">Geist Security menghadirkan orkestrasi otonom dan ketepatan deteksi berbasis AST untuk mengeliminasi false-alarm pada sistem enterprise.</p></div><div class="grid grid-cols-1 md:grid-cols-3 gap-5 transition-opacity duration-300"><div class="rounded-xl border border-zinc-800 bg-zinc-950/70 p-6 flex flex-col justify-between hover:border-zinc-700 transition-colors"><div><div class="w-10 h-10 rounded-lg border border-zinc-800 bg-zinc-900 flex items-center justify-center text-white mb-5"><span class="material-symbols-outlined text-[20px]">hub</span></div><div class="flex items-center gap-2 mb-2"><h3 class="text-base font-semibold text-white">AST Taint Analysis</h3><span class="px-1.5 py-0.2 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 font-mono text-[10px]">Included</span></div><p class="text-sm text-zinc-400 mb-6 leading-relaxed">Melacak alur perpindahan data input pengguna tanpa disanitasi hingga menyentuh innerHTML atau DOM sink sensitif tanpa eksekusi invasif.</p></div><div class="pt-3 border-t border-zinc-800/80 flex items-center justify-between font-mono text-xs text-zinc-500"><span class="flex items-center gap-1.5 text-zinc-400"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>Exact Node Lineage</span><span>All plans</span></div></div><div class="rounded-xl border border-zinc-800 bg-zinc-950/70 p-6 flex flex-col justify-between hover:border-zinc-700 transition-colors"><div><div class="w-10 h-10 rounded-lg border border-zinc-800 bg-zinc-900 flex items-center justify-center text-white mb-5"><span class="material-symbols-outlined text-[20px]">security</span></div><div class="flex items-center gap-2 mb-2"><h3 class="text-base font-semibold text-white">OSV.dev Reachability</h3><span class="px-1.5 py-0.2 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 font-mono text-[10px]">Included</span></div><p class="text-sm text-zinc-400 mb-6 leading-relaxed">Memvalidasi apakah dependensi npm/pip yang rentan benar-benar dipanggil oleh fungsi aktif dalam kode, mengeliminasi alarm palsu.</p></div><div class="pt-3 border-t border-zinc-800/80 flex items-center justify-between font-mono text-xs text-zinc-500"><span class="flex items-center gap-1.5 text-zinc-400"><span class="w-1.5 h-1.5 rounded-full bg-[#0070f3]"></span>Dependency Graph</span><span>All plans</span></div></div><div class="rounded-xl border border-zinc-800 bg-zinc-950/70 p-6 flex flex-col justify-between hover:border-zinc-700 transition-colors"><div><div class="w-10 h-10 rounded-lg border border-zinc-800 bg-zinc-900 flex items-center justify-center text-white mb-5"><span class="material-symbols-outlined text-[20px]">key</span></div><div class="flex items-center gap-2 mb-2"><h3 class="text-base font-semibold text-white">Shannon Entropy Meter</h3><span class="px-1.5 py-0.2 rounded border border-zinc-800 bg-zinc-900 text-zinc-400 font-mono text-[10px]">Included</span></div><p class="text-sm text-zinc-400 mb-6 leading-relaxed">Mendeteksi kunci privat AWS, OpenAI key, JWT token, dan database credential tersembunyi yang tertinggal dalam bundle klien seketika.</p></div><div class="pt-3 border-t border-zinc-800/80 flex items-center justify-between font-mono text-xs text-zinc-500"><span class="flex items-center gap-1.5 text-zinc-400"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>High Density Tokens</span><span>All plans</span></div></div></div></div>
+<!-- Terminal Stream Preview (Vercel Console Style) -->
+<div class="max-w-4xl mx-auto w-full mt-14 p-4 rounded-xl bg-black border border-zinc-800 font-mono text-xs shadow-xl"><div class="h-9 bg-zinc-900/70 border-b border-zinc-800/80 -mx-4 -mt-4 mb-3 px-4 flex items-center justify-between rounded-t-xl"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span><span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span><span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span><span class="font-mono text-xs text-zinc-400 ml-3 flex items-center gap-1.5"><span class="material-symbols-outlined text-[12px]">lock</span>geist-security://session-8092f.telemetry</span></div><div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded border border-[#0070f3]/30 bg-[#0070f3]/10 font-mono text-[10px] text-[#0070f3] font-medium tracking-wide">LIVE SYNTHESIS</span><span class="material-symbols-outlined text-zinc-500 text-[15px]">terminal</span></div></div><div class="space-y-1.5 text-zinc-400 overflow-x-auto p-1"><div class="flex items-center gap-3"><span class="text-zinc-600 select-none">00:01.12</span><span class="text-zinc-300 font-semibold">[AST_PARSER]</span><span>Synthesizing TypeScript AST hierarchy for 42 files...</span></div><div class="flex items-center gap-3 bg-red-950/20 text-red-400 px-2 py-0.5 rounded border-l-2 border-red-500"><span class="text-zinc-600 select-none">00:01.89</span><span class="text-amber-400 font-semibold">[TAINT_ENGINE]</span><span class="text-zinc-200">Traced param `req.query.user_token` to sink `db.rawQuery()` [CWE-89 candidate]</span></div><div class="flex items-center gap-3 bg-emerald-950/20 text-emerald-300 px-2 py-0.5 rounded border-l-2 border-emerald-500"><span class="text-zinc-600 select-none">00:02.34</span><span class="text-emerald-400 font-semibold">[ENTROPY_SCAN]</span><span class="text-zinc-300">Found potential high-entropy token in `dist/assets/app.js:142` (Entropy: 7.94)</span></div><div class="flex items-center gap-3"><span class="text-zinc-600 select-none">00:02.80</span><span class="text-[#0070f3] font-semibold">[OSV_SYNC]</span><span>Reachability verified for CVE-2023-26136 in tough-cookie 4.1.2 • Auto-Patch available</span></div></div></div>
+</div>
+<script>
+    // Segmented Mode Switching
+    const modeButtons = document.querySelectorAll('.mode-pill-btn');
+    const urlContainer = document.getElementById('targetUrlContainer');
+    const githubContainer = document.getElementById('targetGithubContainer');
+    const btnLabel = document.getElementById('btnLabel');
+    const inputUrl = document.getElementById('inputTargetUrl');
+    const inputRepo = document.getElementById('inputTargetRepo');
+
+    let currentMode = 'hybrid';
+
+    modeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const selectedMode = btn.getAttribute('data-mode');
+        setAuditMode(selectedMode);
+      });
+    });
+
+    function setAuditMode(mode) {
+      currentMode = mode;
+      modeButtons.forEach(b => {
+        b.classList.remove('bg-zinc-800/90', 'text-white', 'border', 'border-zinc-700/60', 'shadow-sm');
+        b.classList.add('text-zinc-400');
+      });
+
+      const activeBtn = document.querySelector(`.mode-pill-btn[data-mode="${mode}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-zinc-800/90', 'text-white', 'border', 'border-zinc-700/60', 'shadow-sm');
+        activeBtn.classList.remove('text-zinc-400');
+      }
+
+      if (mode === 'hybrid') {
+        urlContainer.style.display = 'flex';
+        githubContainer.style.display = 'flex';
+        inputUrl.required = true;
+        inputRepo.required = true;
+        btnLabel.textContent = 'Mulai Deep Security Audit (Hybrid)';
+      } else if (mode === 'url') {
+        urlContainer.style.display = 'flex';
+        githubContainer.style.display = 'none';
+        inputUrl.required = true;
+        inputRepo.required = false;
+        btnLabel.textContent = 'Mulai Blackbox URL Audit';
+      } else if (mode === 'github') {
+        urlContainer.style.display = 'none';
+        githubContainer.style.display = 'flex';
+        inputUrl.required = false;
+        inputRepo.required = true;
+        btnLabel.textContent = 'Mulai Whitebox Source Audit';
+      }
+    }
+
+    // 1-Click Preset Handler
+    function applyPreset(url, repo, title, mode) {
+      setAuditMode(mode);
+      inputUrl.value = url;
+      inputRepo.value = repo;
+
+      const launchBtn = document.getElementById('launchAuditBtn');
+      launchBtn.classList.add('ring-2', 'ring-white');
+      setTimeout(() => {
+        launchBtn.classList.remove('ring-2', 'ring-white');
+      }, 300);
+    }
+
+    // Toggle Advanced Options
+    function toggleAdvancedConfig() {
+      const panel = document.getElementById('advancedConfigPanel');
+      const chevron = document.getElementById('advChevron');
+      if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+        panel.classList.add('flex');
+        chevron.textContent = 'expand_less';
+      } else {
+        panel.classList.add('hidden');
+        panel.classList.remove('flex');
+        chevron.textContent = 'expand_more';
+      }
+    }
+
+    // Quick Ping Simulator
+    function pingTargetUrl() {
+      const val = inputUrl.value || 'Target';
+      alert(`[Aura Glass DNS Probe]\nHandshake latency ke ${val}: 18ms (TLS 1.3 Active, HTTP/2). Siap diaudit.`);
+    }
+
+    // Audit Launch Simulation
+    function triggerAuditRun() {
+      const banner = document.getElementById('scanStatusBanner');
+      const progressBar = document.getElementById('auditProgressBar');
+      const statusTitle = document.getElementById('auditStatusTitle');
+      const statusSubtitle = document.getElementById('auditStatusSubtitle');
+      const launchBtn = document.getElementById('launchAuditBtn');
+
+      banner.classList.remove('hidden');
+      launchBtn.disabled = true;
+      launchBtn.classList.add('opacity-70');
+
+      let progress = 20;
+      progressBar.style.width = '25%';
+      statusTitle.textContent = `Memulai Audit ${currentMode.toUpperCase()}...`;
+      statusSubtitle.textContent = `Mengirim AST probe ke ${inputRepo.value || inputUrl.value}`;
+
+      const interval = setInterval(() => {
+        progress += 25;
+        progressBar.style.width = `${progress}%`;
+
+        if (progress === 50) {
+          statusTitle.textContent = 'Menjalankan AST Taint & Parsing Source Nodes...';
+          statusSubtitle.textContent = 'Mendeteksi sink innerHTML & Shannon Entropy string acak';
+        } else if (progress === 75) {
+          statusTitle.textContent = 'Mengkorelasikan Reachable CVEs via OSV.dev...';
+          statusSubtitle.textContent = '3 vulnerable packages diidentifikasi dalam dependency tree';
+        } else if (progress >= 100) {
+          clearInterval(interval);
+          statusTitle.textContent = 'Audit Selesai! Mengarahkan ke Storyteller SSE...';
+          statusSubtitle.textContent = 'Laporan eksekutif & AST interactive explorer siap dilihat';
+          setTimeout(() => {
+            const navLink = document.querySelector('nav a[data-path="storyteller-sse"]');
+            if (navLink) navLink.click();
+          }, 900);
+        }
+      }, 700);
+    }
+  </script>
+</main><footer class="w-full relative px-6 pt-16 pb-12 border-t border-zinc-800/80 bg-black mt-20"><div class="max-w-6xl mx-auto flex flex-col gap-14 relative z-10"><div class="grid grid-cols-1 lg:grid-cols-12 gap-12"><div class="lg:col-span-5 flex flex-col gap-4"><div class="flex items-center gap-2 text-white"><svg class="h-5 w-5 text-white fill-current" viewbox="0 0 24 24"><path d="M12 2L2 19.5h20L12 2z"></path></svg><div class="flex flex-col"><span class="text-sm font-semibold tracking-tight text-white">Geist Security</span><span class="font-mono text-xs text-zinc-500">Autonomous Security Auditor</span></div></div><p class="text-xs text-zinc-400 max-w-sm leading-relaxed">Autonomous engineering intelligence and deterministic security auditing. Defend critical infrastructure with verified AI agents.</p><div class="mt-2"><span class="text-xs font-medium text-zinc-300 block mb-2">Subscribe to Zero-Day Advisory Feed</span><div class="flex items-center gap-2 max-w-sm"><div class="relative flex-1"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-[16px]">mail</span><input class="w-full pl-9 pr-3 py-2 rounded-md border border-zinc-800 bg-zinc-950 text-white placeholder:text-zinc-600 font-mono text-xs focus:outline-none focus:border-zinc-600 transition-colors" placeholder="engineer@enterprise.com" type="email"/></div><button class="px-3.5 py-2 rounded-md bg-white text-black font-medium text-xs hover:bg-zinc-200 transition-colors flex items-center gap-1 shadow-sm"><span>Join</span><span class="material-symbols-outlined text-[14px]">arrow_forward</span></button></div><span class="font-mono text-[10px] text-zinc-600 mt-1.5 block">No spam. Only high-severity CVE diffs and patch digests.</span></div></div><div class="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-8 text-left text-xs"><div class="flex flex-col gap-2.5"><span class="text-zinc-200 font-semibold uppercase tracking-wider text-[11px]">Product</span><a class="text-zinc-400 hover:text-white transition-colors" href="#">Smart Launchpad</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">Storyteller SSE</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">Bento Simulator</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">AST Guardrails</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">Pricing &amp; Tiers</a></div><div class="flex flex-col gap-2.5"><span class="text-zinc-200 font-semibold uppercase tracking-wider text-[11px]">Solutions</span><a class="text-zinc-400 hover:text-white transition-colors" href="#">AppSec Teams</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">DevOps &amp; CI/CD</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">FinTech Security</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">Critical Infra</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">Automated Audits</a></div><div class="flex flex-col gap-2.5"><span class="text-zinc-200 font-semibold uppercase tracking-wider text-[11px]">Resources</span><a class="text-zinc-400 hover:text-white transition-colors" href="#">Documentation</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">API Reference</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">CVE Knowledgebase</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">Security Whitepapers</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">System Benchmarks</a></div><div class="flex flex-col gap-2.5"><span class="text-zinc-200 font-semibold uppercase tracking-wider text-[11px]">Company</span><a class="text-zinc-400 hover:text-white transition-colors" href="#">About Geist</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">Security Bug Bounty</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">Privacy Policy</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">Terms of Service</a><a class="text-zinc-400 hover:text-white transition-colors" href="#">Responsible Disclosure</a></div></div></div><div class="pt-6 border-t border-zinc-800/80 flex flex-col md:flex-row items-center justify-between gap-4 text-xs"><div class="flex items-center gap-2"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span><span class="font-mono text-zinc-300">All systems operational</span><span class="text-zinc-600">•</span><span class="font-mono text-zinc-500">Cluster Latency 14ms</span></div><div class="flex items-center gap-2 text-zinc-400"><a class="w-8 h-8 rounded-md border border-zinc-800 bg-zinc-900/60 flex items-center justify-center hover:text-white hover:border-zinc-700 transition-colors" href="#" title="GitHub"><span class="material-symbols-outlined text-[16px]">code</span></a><a class="w-8 h-8 rounded-md border border-zinc-800 bg-zinc-900/60 flex items-center justify-center hover:text-white hover:border-zinc-700 transition-colors" href="#" title="Discord / Community"><span class="material-symbols-outlined text-[16px]">forum</span></a><a class="w-8 h-8 rounded-md border border-zinc-800 bg-zinc-900/60 flex items-center justify-center hover:text-white hover:border-zinc-700 transition-colors" href="#" title="Terminal Access"><span class="material-symbols-outlined text-[16px]">terminal</span></a><a class="w-8 h-8 rounded-md border border-zinc-800 bg-zinc-900/60 flex items-center justify-center hover:text-white hover:border-zinc-700 transition-colors" href="#" title="Security Advisory RSS"><span class="material-symbols-outlined text-[16px]">rss_feed</span></a></div><div class="font-mono text-zinc-500 text-center md:text-right">© 2025 Geist Security Systems. All rights reserved.</div></div></div></footer><footer class="relative z-10 w-full bg-black border-t border-zinc-800/80 py-4"><div class="max-w-6xl mx-auto px-6 flex flex-col lg:flex-row items-center justify-between gap-4 text-xs font-mono text-zinc-500"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-zinc-400 text-[18px]">verified_user</span><div class="flex flex-col sm:flex-row sm:items-center sm:gap-2"><span class="text-zinc-300">Non-Destructive AST &amp; Heuristic Telemetry Engine</span><span class="hidden sm:inline text-zinc-700">•</span><span>Shannon Entropy 7.94 • PII Memory Auto-Redaction Active</span></div></div><div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900/60 text-zinc-400">OSV.dev Sync</span><span class="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900/60 text-zinc-400">CWE-Top-25</span><span class="px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900/60 text-zinc-400">Zero Data Retention</span></div></div></footer></body></html>

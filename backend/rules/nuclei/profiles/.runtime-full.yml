@@ -1,0 +1,14 @@
+severity:
+- critical
+- high
+- medium
+- low
+- info
+stop-at-first-match: false
+templates:
+- /home/leexy/testsprite/secaudit/backend/rules/nuclei/01-sensitive-exposures
+- /home/leexy/testsprite/secaudit/backend/rules/nuclei/02-misconfigurations
+- /home/leexy/testsprite/secaudit/backend/rules/nuclei/03-often-overlooked
+- /home/leexy/testsprite/secaudit/backend/rules/nuclei/04-panels-and-actuators
+- /home/leexy/testsprite/secaudit/backend/rules/nuclei/05-core-dast
+- /home/leexy/testsprite/secaudit/backend/rules/nuclei/06-cisa-kev-popular
