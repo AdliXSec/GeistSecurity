@@ -18,7 +18,7 @@ if "backend" not in sys.modules:
     pkg.__file__ = str(_CURRENT_DIR / "__init__.py")
     sys.modules["backend"] = pkg
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -55,6 +55,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def normalize_double_api_middleware(request: Request, call_next):
+    # Fix accidental double /api/api prefix if frontend environment variable has /api appended
+    path = request.scope.get("path", "")
+    if path.startswith("/api/api/"):
+        request.scope["path"] = path[4:]
+    return await call_next(request)
 
 # Include Routers
 app.include_router(audits.router)
