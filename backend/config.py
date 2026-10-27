@@ -3,7 +3,23 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 
 _BACKEND_DIR = Path(__file__).resolve().parent
-_DEFAULT_DB = "/tmp/secaudit.db" if os.getenv("VERCEL") == "1" else str(_BACKEND_DIR / "secaudit.db")
+
+def _resolve_default_db() -> str:
+    custom_path = os.getenv("DATABASE_PATH")
+    if custom_path:
+        return custom_path
+    if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") or os.getenv("VERCEL_ENV"):
+        return "/tmp/secaudit.db"
+    local_db = _BACKEND_DIR / "secaudit.db"
+    try:
+        test_file = _BACKEND_DIR / ".write_test"
+        test_file.touch()
+        test_file.unlink()
+        return str(local_db)
+    except Exception:
+        return "/tmp/secaudit.db"
+
+_DEFAULT_DB = _resolve_default_db()
 _ENV_FILE = str(_BACKEND_DIR / ".env")
 
 class Settings(BaseSettings):

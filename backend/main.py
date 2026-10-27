@@ -18,8 +18,12 @@ from backend.routers import audits, auth
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Inisialisasi Database SQLite
-    await init_db()
+    # Startup: Inisialisasi Database SQLite dengan proteksi serverless error handling
+    try:
+        await init_db()
+    except Exception as e:
+        import logging
+        logging.getLogger("uvicorn.error").error(f"Failed to initialize database during startup: {e}")
     yield
     # Shutdown
 
