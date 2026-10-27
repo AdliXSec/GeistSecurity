@@ -125,3 +125,11 @@ class TestNucleiScanner(unittest.TestCase):
         )
         self.assertTrue(ti.enable_nuclei)
         self.assertEqual(ti.nuclei_findings_count, 5)
+
+    def test_python_nuclei_fallback_execution(self):
+        import asyncio
+        from backend.services.nuclei_scanner import run_python_nuclei_fallback
+
+        # Mock test fallback execution against local dummy/invalid target
+        findings = asyncio.run(run_python_nuclei_fallback("http://127.0.0.1:59999", scan_profile="quick"))
+        self.assertIsInstance(findings, list)
