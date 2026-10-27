@@ -41,8 +41,87 @@ interface ColumnVisibility {
 }
 
 type GradeFilter = 'All' | 'Grade A' | 'Grade B' | 'Grade C/D';
+type SeverityFilter = 'All' | 'Critical' | 'High' | 'Medium' | 'Low';
 type EnvFilter = 'All' | 'Prod & Staging' | 'Prod' | 'Staging';
 type SortOption = 'recent' | 'score_desc' | 'score_asc' | 'vulns' | 'name';
+
+const DEFAULT_PROJECTS: Project[] = [
+  {
+    id: 'demo-fintech',
+    name: 'Fintech Payment Core',
+    grade: 'D',
+    gradeLabel: 'Grade D (38/100)',
+    score: 38,
+    auditType: 'Hybrid Audit',
+    repo: 'https://demo-fintech.auraglass.io',
+    branch: 'main',
+    vulnSummary: '2 Critical, 1 High',
+    vulnColor: 'text-red-400',
+    timeAgo: '12m ago',
+    scanDuration: '24.2s scan',
+    dotColor: 'bg-red-400',
+    iconBg: 'bg-red-500/10',
+    iconColor: 'text-red-400',
+    iconType: 'warning',
+    gradeBg: 'bg-red-500/15',
+    gradeColor: 'text-red-400',
+    dotPing: false,
+    hasSimulatePatch: true,
+    criticalCount: 2,
+    highCount: 1,
+    environment: 'Prod',
+  },
+  {
+    id: 'demo-ecommerce',
+    name: 'E-Commerce Storefront',
+    grade: 'B',
+    gradeLabel: 'Grade B (82/100)',
+    score: 82,
+    auditType: 'Blackbox DAST',
+    repo: 'https://store.demo.internal',
+    branch: 'main',
+    vulnSummary: '0 Critical, 1 High',
+    vulnColor: 'text-amber-400',
+    timeAgo: '1h ago',
+    scanDuration: '18.4s scan',
+    dotColor: 'bg-blue-400',
+    iconBg: 'bg-blue-500/10',
+    iconColor: 'text-blue-400',
+    iconType: 'shield',
+    gradeBg: 'bg-blue-500/15',
+    gradeColor: 'text-blue-400',
+    dotPing: false,
+    hasSimulatePatch: true,
+    criticalCount: 0,
+    highCount: 1,
+    environment: 'Staging',
+  },
+  {
+    id: 'demo-edge-api',
+    name: 'Edge API Gateway',
+    grade: 'A',
+    gradeLabel: 'Grade A (95/100)',
+    score: 95,
+    auditType: 'Whitebox SAST',
+    repo: 'https://github.com/auraglass/edge-api',
+    branch: 'main',
+    vulnSummary: 'Clean & Hardened (0 Findings)',
+    vulnColor: 'text-emerald-400',
+    timeAgo: '3h ago',
+    scanDuration: '14.1s scan',
+    dotColor: 'bg-emerald-400',
+    iconBg: 'bg-emerald-500/10',
+    iconColor: 'text-emerald-400',
+    iconType: 'check',
+    gradeBg: 'bg-emerald-500/15',
+    gradeColor: 'text-emerald-400',
+    dotPing: false,
+    hasSimulatePatch: false,
+    criticalCount: 0,
+    highCount: 0,
+    environment: 'Prod',
+  },
+];
 
 function formatTimeAgo(dateString?: string): string {
   if (!dateString) return 'Recently';
@@ -274,11 +353,12 @@ function renderProjectIcon(type: string, className = 'w-4 h-4') {
 
 export default function DashboardPage() {
   const [activeFilter, setActiveFilter] = useState<GradeFilter>('All');
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>('All');
   const [envFilter, setEnvFilter] = useState<EnvFilter>('Prod & Staging');
   const [sortOption, setSortOption] = useState<SortOption>('recent');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [projectList, setProjectList] = useState<Project[]>([]);
+  const [projectList, setProjectList] = useState<Project[]>(DEFAULT_PROJECTS);
 
   // Modals & Popovers
   const [showColumnsMenu, setShowColumnsMenu] = useState(false);
@@ -373,10 +453,14 @@ export default function DashboardPage() {
           };
         });
 
-        setProjectList(apiProjects);
+        if (apiProjects.length > 0) {
+          setProjectList(apiProjects);
+        } else {
+          setProjectList(DEFAULT_PROJECTS);
+        }
       } catch (err) {
         console.warn('Could not fetch audits from API:', err);
-        setProjectList([]);
+        setProjectList(DEFAULT_PROJECTS);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -531,6 +615,14 @@ export default function DashboardPage() {
         (envFilter === 'Prod' && p.environment === 'Prod') ||
         (envFilter === 'Staging' && (p.environment === 'Staging' || p.environment === 'Dev'));
 
+      // Severity filter
+      const matchesSeverity =
+        severityFilter === 'All' ||
+        (severityFilter === 'Critical' && (p.criticalCount || 0) > 0) ||
+        (severityFilter === 'High' && (p.highCount || 0) > 0) ||
+        (severityFilter === 'Medium' && (p.vulnSummary?.toLowerCase().includes('medium') || p.grade === 'B' || p.grade === 'C')) ||
+        (severityFilter === 'Low' && (p.vulnSummary?.toLowerCase().includes('low') || p.grade === 'A'));
+
       // Search query
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
@@ -542,7 +634,7 @@ export default function DashboardPage() {
         p.auditType.toLowerCase().includes(q) ||
         (p.id && p.id.toLowerCase().includes(q));
 
-      return matchesGrade && matchesEnv && matchesSearch;
+      return matchesGrade && matchesEnv && matchesSeverity && matchesSearch;
     })
     .sort((a, b) => {
       if (sortOption === 'score_desc') return b.score - a.score;
@@ -1076,6 +1168,27 @@ export default function DashboardPage() {
 
         {/* Filter & sort */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Severity tabs */}
+          <div className="flex items-center gap-1 bg-[#0a0a0a] border border-[#1e1e22] p-1 rounded-lg" data-testid="severity-tabs">
+            {(['All', 'Critical', 'High', 'Medium', 'Low'] as SeverityFilter[]).map((sev) => (
+              <button
+                key={sev}
+                type="button"
+                onClick={() => {
+                  setSeverityFilter(sev);
+                  setCurrentPage(1);
+                }}
+                className={`px-2.5 py-1 rounded text-[11px] font-mono transition-colors ${
+                  severityFilter === sev
+                    ? 'bg-[#1e1e22] text-white shadow-sm font-medium'
+                    : 'text-[#71717a] hover:text-[#ededed]'
+                }`}
+              >
+                {sev}
+              </button>
+            ))}
+          </div>
+
           {/* Grade tabs */}
           <div className="flex items-center gap-1 bg-[#0a0a0a] border border-[#1e1e22] p-1 rounded-lg">
             {(['All', 'Grade A', 'Grade B', 'Grade C/D'] as GradeFilter[]).map((f) => (

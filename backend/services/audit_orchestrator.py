@@ -86,13 +86,12 @@ async def run_audit_pipeline(
     start_time = time.time()
     created_at = datetime.now(timezone.utc).isoformat()
 
-    # Auto-route GitHub repo URLs provided in target_url
-    if target_url and "github.com" in target_url.lower():
+    # Auto-route GitHub repo URLs provided in target_url only if mode is not BLACKBOX
+    if target_url and "github.com" in target_url.lower() and mode != "BLACKBOX":
         if not github_repo_url:
             github_repo_url = target_url
         target_url = None
-        if mode == "BLACKBOX":
-            mode = "WHITEBOX"
+        mode = "WHITEBOX"
 
     try:
         # Initial Save status

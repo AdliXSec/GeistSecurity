@@ -186,16 +186,16 @@ async def get_audit_report(session_id: str, user: Optional[dict] = Depends(get_c
                     "detected_tech_stack": ["Next.js 14.1.0", "React 18.2.0", "Tailwind CSS", "Nginx 1.24.0"]
                 },
                 "posture_score": {
-                    "score": 55,
+                    "score": 42,
                     "max_score": 100,
                     "grade": "D",
                     "grade_label": "High Risk — Immediate Remediation Required",
                     "summary_counts": {
-                        "critical": 1,
-                        "high": 1,
-                        "medium": 1,
+                        "critical": 3,
+                        "high": 3,
+                        "medium": 5,
                         "low": 0,
-                        "info": 2
+                        "info": 1
                     }
                 },
                 "findings": [
@@ -446,6 +446,182 @@ async def get_audit_report(session_id: str, user: Optional[dict] = Depends(get_c
                                 "language": "html",
                                 "original_code": "<!-- TODO: hapus staging API key sebelum deploy rilis produksi -->\n<div>Content</div>",
                                 "patched_code": "<!-- Komentar sensitif dibuang saat build produksi -->\n<div>Content</div>"
+                            }
+                        }
+                    },
+                    {
+                        "id": "f108-recon-cookie-flags",
+                        "rule_id": "COOKIE-PROTECTION-FLAGS-MISSING",
+                        "category": "MISCONFIG_DEFAULT",
+                        "severity": "MEDIUM",
+                        "title": "Missing Cookie Protection Flags (Secure, HttpOnly, SameSite)",
+                        "cwe_id": "CWE-614",
+                        "owasp_category": "A05:2021-Security Misconfiguration",
+                        "cvss_score": 5.4,
+                        "location": {
+                            "source_origin": "DAST_HEADER_SCANNER",
+                            "path": "Set-Cookie: session_id=a8f9c21b4e; Path=/;",
+                            "line_start": 1,
+                            "line_end": 1
+                        },
+                        "redacted_code_snippet": "Set-Cookie: session_id=a8f9c21b4e; Path=/; Domain=demo-fintech.auraglass.io\n// Warning: Missing Secure, HttpOnly, and SameSite cookie protection flags",
+                        "evidence_metadata": {
+                            "cookie_name": "session_id",
+                            "missing_flags": ["Secure", "HttpOnly", "SameSite"],
+                            "issue": "Missing cookie protection flags enable session hijacking and CSRF vectors"
+                        },
+                        "ai_remediation": {
+                            "model": "gemini-2.5-flash",
+                            "risk_explanation": "Session and authentication cookies transmitted without Secure, HttpOnly, and SameSite attributes can be intercepted over unencrypted channels or accessed via client-side cross-site scripting (XSS).",
+                            "remediation_steps": [
+                                "Enforce HttpOnly flag on all session cookies to prevent access via document.cookie.",
+                                "Set Secure flag so cookies are only transmitted over HTTPS connections.",
+                                "Configure SameSite=Lax or SameSite=Strict to mitigate Cross-Site Request Forgery (CSRF)."
+                            ],
+                            "code_patch": {
+                                "language": "typescript",
+                                "original_code": "res.setHeader('Set-Cookie', 'session_id=' + token + '; Path=/');",
+                                "patched_code": "res.setHeader('Set-Cookie', 'session_id=' + token + '; Path=/; Secure; HttpOnly; SameSite=Lax');"
+                            }
+                        }
+                    },
+                    {
+                        "id": "f109-recon-security-headers",
+                        "rule_id": "HTTP-SECURITY-HEADER-MISSING",
+                        "category": "MISCONFIG_DEFAULT",
+                        "severity": "MEDIUM",
+                        "title": "Missing Passive HTTP Security Headers (Strict-Transport-Security, X-Frame-Options, X-Content-Type-Options)",
+                        "cwe_id": "CWE-693",
+                        "owasp_category": "A05:2021-Security Misconfiguration",
+                        "cvss_score": 5.8,
+                        "location": {
+                            "source_origin": "DAST_HEADER_SCANNER",
+                            "path": "HTTP Response Headers: https://demo-fintech.auraglass.io",
+                            "line_start": 1,
+                            "line_end": 1
+                        },
+                        "redacted_code_snippet": "HTTP/1.1 200 OK\n// Missing passive HTTP security headers:\n// - Strict-Transport-Security (HSTS): MISSING\n// - X-Frame-Options: MISSING\n// - X-Content-Type-Options: MISSING\n// - Referrer-Policy: MISSING",
+                        "evidence_metadata": {
+                            "missing_headers": ["Strict-Transport-Security", "X-Frame-Options", "X-Content-Type-Options", "Referrer-Policy"],
+                            "issue": "Missing passive HTTP security headers weaken defense against clickjacking and MIME sniffing"
+                        },
+                        "ai_remediation": {
+                            "model": "gemini-2.5-flash",
+                            "risk_explanation": "Missing defensive HTTP security headers expose web applications to clickjacking framing attacks, MIME-type sniffing, and SSL stripping vectors.",
+                            "remediation_steps": [
+                                "Implement Strict-Transport-Security with max-age=31536000 and includeSubDomains.",
+                                "Set X-Frame-Options to DENY or SAMEORIGIN to prevent framing clickjacking.",
+                                "Set X-Content-Type-Options to nosniff to enforce MIME-type compliance."
+                            ],
+                            "code_patch": {
+                                "language": "nginx",
+                                "original_code": "# nginx.conf\nserver {\n    listen 443 ssl;\n}",
+                                "patched_code": "# nginx.conf\nserver {\n    listen 443 ssl;\n    add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;\n    add_header X-Frame-Options \"SAMEORIGIN\" always;\n    add_header X-Content-Type-Options \"nosniff\" always;\n    add_header Referrer-Policy \"strict-origin-when-cross-origin\" always;\n}"
+                            }
+                        }
+                    },
+                    {
+                        "id": "f110-recon-csp-weakness",
+                        "rule_id": "HTTP-MISSING-CSP",
+                        "category": "MISCONFIG_DEFAULT",
+                        "severity": "HIGH",
+                        "title": "Content Security Policy (CSP) Directives Missing & Unrestricted Script Execution",
+                        "cwe_id": "CWE-1021",
+                        "owasp_category": "A05:2021-Security Misconfiguration",
+                        "cvss_score": 7.2,
+                        "location": {
+                            "source_origin": "DAST_HEADER_SCANNER",
+                            "path": "Content-Security-Policy: [HEADER NOT DETECTED]",
+                            "line_start": 1,
+                            "line_end": 1
+                        },
+                        "redacted_code_snippet": "HTTP/1.1 200 OK\nContent-Security-Policy: [HEADER NOT DETECTED]\n// Unrestricted script execution permitted without Content Security Policy protection",
+                        "evidence_metadata": {
+                            "header": "Content-Security-Policy",
+                            "issue": "Content Security Policy weakness allows unconstrained script injection and cross-site framing"
+                        },
+                        "ai_remediation": {
+                            "model": "gemini-2.5-flash",
+                            "risk_explanation": "Absence of Content Security Policy (CSP) headers allows arbitrary third-party scripts, inline event handlers, and data URIs to execute in victim browsers.",
+                            "remediation_steps": [
+                                "Define a restrictive Content-Security-Policy header with default-src 'self'.",
+                                "Disallow unsafe-inline and unsafe-eval script sources.",
+                                "Restrict connect-src to authorized API gateways only."
+                            ],
+                            "code_patch": {
+                                "language": "nginx",
+                                "original_code": "# Missing Content-Security-Policy\nadd_header X-Frame-Options \"SAMEORIGIN\";",
+                                "patched_code": "add_header Content-Security-Policy \"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self';\" always;"
+                            }
+                        }
+                    },
+                    {
+                        "id": "f111-recon-nginx-cve",
+                        "rule_id": "OUTDATED-PKG-CVE-2021-23017",
+                        "category": "TECH_AND_CVE",
+                        "severity": "HIGH",
+                        "title": "Web Server Component Vulnerable to CVE-2021-23017 (Nginx 1.18.0)",
+                        "cwe_id": "CWE-119",
+                        "owasp_category": "A06:2021-Vulnerable and Outdated Components",
+                        "cvss_score": 8.1,
+                        "location": {
+                            "source_origin": "TECH_FINGERPRINT",
+                            "path": "Server: nginx/1.18.0",
+                            "line_start": 1,
+                            "line_end": 1
+                        },
+                        "redacted_code_snippet": "HTTP/1.1 200 OK\nServer: nginx/1.18.0 (Ubuntu)\nX-Powered-By: Next.js",
+                        "evidence_metadata": {
+                            "component": "Nginx",
+                            "version": "1.18.0",
+                            "cve": "CVE-2021-23017"
+                        },
+                        "ai_remediation": {
+                            "model": "gemini-2.5-flash",
+                            "risk_explanation": "Nginx version 1.18.0 suffers from a 1-byte memory overwrite flaw in the DNS resolver module (CVE-2021-23017), which could allow remote unauthenticated attackers to cause a denial of service or execute arbitrary code.",
+                            "remediation_steps": [
+                                "Upgrade Nginx package to the latest stable release (minimum 1.20.1 or 1.24+).",
+                                "Conceal server banner version headers using server_tokens off; directive."
+                            ],
+                            "code_patch": {
+                                "language": "nginx",
+                                "original_code": "# nginx.conf\nhttp {\n    # server_tokens default on\n}",
+                                "patched_code": "# nginx.conf\nhttp {\n    server_tokens off;\n}"
+                            }
+                        }
+                    },
+                    {
+                        "id": "f112-recon-jquery-cve",
+                        "rule_id": "OUTDATED-PKG-CVE-2015-9251",
+                        "category": "TECH_AND_CVE",
+                        "severity": "MEDIUM",
+                        "title": "Client Library Component Vulnerable to CVE-2015-9251 (jQuery 2.1.4)",
+                        "cwe_id": "CWE-79",
+                        "owasp_category": "A06:2021-Vulnerable and Outdated Components",
+                        "cvss_score": 6.1,
+                        "location": {
+                            "source_origin": "TECH_FINGERPRINT",
+                            "path": "https://demo-fintech.auraglass.io/assets/jquery-2.1.4.min.js",
+                            "line_start": 1,
+                            "line_end": 1
+                        },
+                        "redacted_code_snippet": "/*! jQuery v2.1.4 | (c) 2005, 2015 jQuery Foundation, Inc. | jquery.org/license */",
+                        "evidence_metadata": {
+                            "component": "jQuery",
+                            "version": "2.1.4",
+                            "cve": "CVE-2015-9251"
+                        },
+                        "ai_remediation": {
+                            "model": "gemini-2.5-flash",
+                            "risk_explanation": "jQuery before 3.0.0 is vulnerable to Cross-Site Scripting (CVE-2015-9251) via parseHTML which does not strip malicious executable scripts when parsing untrusted markup.",
+                            "remediation_steps": [
+                                "Upgrade jQuery to version 3.5.0 or later (recommended 3.7.1).",
+                                "Use modern native DOM APIs (fetch, querySelector) to reduce dependency on legacy client libraries."
+                            ],
+                            "code_patch": {
+                                "language": "html",
+                                "original_code": "<script src=\"/assets/jquery-2.1.4.min.js\"></script>",
+                                "patched_code": "<script src=\"/assets/jquery-3.7.1.min.js\"></script>"
                             }
                         }
                     }
