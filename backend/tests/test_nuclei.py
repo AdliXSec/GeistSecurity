@@ -133,3 +133,33 @@ class TestNucleiScanner(unittest.TestCase):
         # Mock test fallback execution against local dummy/invalid target
         findings = asyncio.run(run_python_nuclei_fallback("http://127.0.0.1:59999", scan_profile="quick"))
         self.assertIsInstance(findings, list)
+
+    def test_evaluate_simple_dsl(self):
+        import httpx
+        from backend.services.nuclei_scanner import evaluate_simple_dsl
+
+        # Simulasi response normal HTML 200
+        req = httpx.Request("GET", "https://example.com/test")
+        resp = httpx.Response(
+            status_code=200,
+            headers={"content-type": "text/html; charset=utf-8", "server": "nginx"},
+            text="<html><head><title>Welcome</title></head><body><h1>Hello World</h1></body></html>",
+            request=req
+        )
+
+        # Status code tests
+        self.assertTrue(evaluate_simple_dsl("status_code == 200", resp))
+        self.assertFalse(evaluate_simple_dsl("status_code == 404", resp))
+        self.assertFalse(evaluate_simple_dsl("status_code != 200", resp))
+
+        # Positive contains
+        self.assertTrue(evaluate_simple_dsl("contains(body, 'Hello World')", resp))
+        self.assertFalse(evaluate_simple_dsl("contains(body, 'SecretAdmin')", resp))
+
+        # Negative contains
+        self.assertTrue(evaluate_simple_dsl("!contains(body, 'Authentication required')", resp))
+        self.assertFalse(evaluate_simple_dsl("!contains(body, 'Hello World')", resp))
+
+        # Unhandled OAST / Timing constructs must be rejected safely
+        self.assertFalse(evaluate_simple_dsl("duration <= 7", resp))
+        self.assertFalse(evaluate_simple_dsl("contains(interactsh_protocol, 'dns')", resp))
