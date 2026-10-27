@@ -31,7 +31,8 @@ def _resolve_default_db() -> str:
         return "/tmp/secaudit.db"
 
 _DEFAULT_DB = _resolve_default_db()
-_ENV_FILE = str(_BACKEND_DIR / ".env")
+_ROOT_DIR = _BACKEND_DIR.parent
+_ENV_FILES = (str(_BACKEND_DIR / ".env"), str(_ROOT_DIR / ".env"))
 
 class Settings(BaseSettings):
     APP_NAME: str = "Aura Glass - Autonomous Security Audit"
@@ -47,6 +48,12 @@ class Settings(BaseSettings):
     AUTH_TOKEN_EXPIRE_HOURS: int = 72
     HOST: str = "0.0.0.0"
     PORT: int = 8000
+    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+    SUPABASE_KEY: str = (
+        os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+        or os.getenv("SUPABASE_KEY", "")
+        or os.getenv("SUPABASE_ANON_KEY", "")
+    )
 
     @field_validator("DATABASE_PATH", mode="after")
     @classmethod
@@ -61,7 +68,7 @@ class Settings(BaseSettings):
         return v
 
     model_config = {
-        "env_file": _ENV_FILE,
+        "env_file": _ENV_FILES,
         "extra": "ignore",
     }
 
