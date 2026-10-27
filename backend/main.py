@@ -50,6 +50,17 @@ app.add_middleware(
 app.include_router(audits.router)
 app.include_router(auth.router)
 
+@app.get("/api", tags=["API Root"])
+@app.get("/api/", tags=["API Root"])
+async def api_root():
+    return {
+        "status": "online",
+        "service": settings.APP_NAME,
+        "version": settings.VERSION,
+        "docs_url": "/api/docs",
+        "health_url": "/api/v1/health"
+    }
+
 @app.get("/api/v1/health", tags=["Health"])
 async def health_check():
     return {
