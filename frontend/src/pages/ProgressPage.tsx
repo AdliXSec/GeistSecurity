@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getStoredToken } from '../lib/api';
+import { getStoredToken, API_BASE } from '../lib/api';
 
 interface Stage {
   id: number;
@@ -268,7 +268,7 @@ export default function ProgressPage() {
   // Connect to SSE stream & Polling Fallback
   useEffect(() => {
     const sessionId = id || 'demo-fintech';
-    const streamUrl = `/api/v1/audits/${sessionId}/stream`;
+    const streamUrl = `${API_BASE}/audits/${sessionId}/stream`;
 
     let es: EventSource | null = null;
     let isTerminated = false;
@@ -277,7 +277,7 @@ export default function ProgressPage() {
     const token = getStoredToken();
     const authHeaders: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
-    fetch(`/api/v1/audits/${sessionId}`, { headers: authHeaders })
+    fetch(`${API_BASE}/audits/${sessionId}`, { headers: authHeaders })
       .then((res) => {
         if (res.ok) return res.json();
         return null;
@@ -402,7 +402,7 @@ export default function ProgressPage() {
     const pollInterval = setInterval(async () => {
       if (isTerminated) return;
       try {
-        const res = await fetch(`/api/v1/audits/${sessionId}`, { headers: authHeaders });
+        const res = await fetch(`${API_BASE}/audits/${sessionId}`, { headers: authHeaders });
         if (res.ok) {
           const audit = await res.json();
           if (audit.status === 'COMPLETED') {

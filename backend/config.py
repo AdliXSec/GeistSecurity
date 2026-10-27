@@ -3,7 +3,7 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 
 _BACKEND_DIR = Path(__file__).resolve().parent
-_DEFAULT_DB = str(_BACKEND_DIR / "secaudit.db")
+_DEFAULT_DB = "/tmp/secaudit.db" if os.getenv("VERCEL") == "1" else str(_BACKEND_DIR / "secaudit.db")
 _ENV_FILE = str(_BACKEND_DIR / ".env")
 
 class Settings(BaseSettings):

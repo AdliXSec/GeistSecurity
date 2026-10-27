@@ -209,7 +209,12 @@ export interface LoginPayload {
   password: string;
 }
 
-const API_BASE = '/api/v1';
+const API_HOST = (
+  (import.meta.env.VITE_API_URL as string | undefined) ||
+  (import.meta.env.VITE_BACKEND_URL as string | undefined) ||
+  ''
+).trim().replace(/\/$/, '');
+export const API_BASE = API_HOST ? `${API_HOST}/api/v1` : '/api/v1';
 const TOKEN_KEY = 'geist_auth_token';
 const USER_KEY = 'geist_auth_user';
 

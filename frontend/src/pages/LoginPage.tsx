@@ -6,9 +6,9 @@ import { loginUser, getStoredToken } from "../lib/api";
 /*  Inline SVG Icons (Zero Unicode Emojis)                             */
 /* ------------------------------------------------------------------ */
 
-const VercelTriangle = () => (
+const InvertedTriangleLogo = () => (
   <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 76 65" fill="none">
-    <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" fill="currentColor" />
+    <path d="M37.5274 65L0 0H75.0548L37.5274 65Z" fill="currentColor" />
   </svg>
 );
 
@@ -102,7 +102,7 @@ export default function LoginPage() {
       {/* ── Top Geometric Minimal Brand Mark ── */}
       <div className="flex flex-col items-center mb-6">
         <div className="w-10 h-10 rounded-lg bg-[#111113] border border-[#1e1e22] flex items-center justify-center shadow-md mb-3">
-          <VercelTriangle />
+          <InvertedTriangleLogo />
         </div>
         <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#111113] border border-[#1e1e22]">
           <span className="w-1.5 h-1.5 rounded-full bg-white" />

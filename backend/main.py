@@ -1,6 +1,13 @@
 import os
-from contextlib import asynccontextmanager
+import sys
 from pathlib import Path
+from contextlib import asynccontextmanager
+
+# Ensure root directory is in sys.path for absolute 'backend.*' imports on serverless platforms
+_ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(_ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(_ROOT_DIR))
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
