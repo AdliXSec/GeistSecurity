@@ -548,6 +548,13 @@ export default function ProgressPage() {
             }
             return next;
           } else if (prev >= 98 && !isCompleted) {
+            // For real live audit sessions, wait for actual backend completion signal (SSE or DB polling)
+            const isDemo = !id || id === 'demo-fintech';
+            if (!isDemo) {
+              setNarrative('Synthesizing comprehensive security report and calculating posture metrics...');
+              return 95;
+            }
+
             setIsCompleted(true);
             setStages((curr) => curr.map((s) => ({ ...s, status: 'completed' })));
             setTimeout(() => {

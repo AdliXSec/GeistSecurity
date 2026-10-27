@@ -631,7 +631,7 @@ export default function ReportPage() {
   const navigate = useNavigate();
 
   const [report, setReport] = useState<AuditReport>(FALLBACK_REPORT);
-  const [, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(id && id !== 'demo-fintech'));
   const [activeTabByFinding, setActiveTabByFinding] = useState<Record<string, 'summary' | 'evidence' | 'diff'>>({});
   const [copiedPatchId, setCopiedPatchId] = useState<string | null>(null);
   const [severityFilter, setSeverityFilter] = useState<string>('all');
@@ -649,28 +649,54 @@ export default function ReportPage() {
 
   // Fetch report from API
   useEffect(() => {
+    let isMounted = true;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+    let retryCount = 0;
+    const maxRetries = 20;
+
     const fetchReport = async () => {
-      setLoading(true);
       try {
         const sessionId = id || 'demo-fintech';
+        const isRealSession = Boolean(id && id !== 'demo-fintech');
         const data = await getAuditReport(sessionId);
+
         if (data && data.findings && data.posture_score) {
           if (!data.recon_summary && (id === 'demo-fintech' || !id)) {
             data.recon_summary = DEFAULT_RECON_SUMMARY;
           }
-          setReport(data);
+          if (isMounted) {
+            setReport(data);
+            setLoading(false);
+          }
+        } else if (isRealSession && retryCount < maxRetries) {
+          // Report still being processed by backend, poll every 1.5 seconds
+          retryCount += 1;
+          pollTimer = setTimeout(fetchReport, 1500);
         } else {
-          setReport(FALLBACK_REPORT);
+          if (isMounted) {
+            setReport(FALLBACK_REPORT);
+            setLoading(false);
+          }
         }
       } catch (err) {
-        console.warn('Could not load backend report, using comprehensive fallback demo:', err);
-        setReport(FALLBACK_REPORT);
-      } finally {
-        setLoading(false);
+        console.warn('Could not load backend report:', err);
+        const isRealSession = Boolean(id && id !== 'demo-fintech');
+        if (isRealSession && retryCount < maxRetries) {
+          retryCount += 1;
+          pollTimer = setTimeout(fetchReport, 1500);
+        } else if (isMounted) {
+          setReport(FALLBACK_REPORT);
+          setLoading(false);
+        }
       }
     };
 
     fetchReport();
+
+    return () => {
+      isMounted = false;
+      if (pollTimer) clearTimeout(pollTimer);
+    };
   }, [id]);
 
   // Recalculate Posture Score & Grade based on Patched Findings (PRD Section 4.3 & 9.3)
@@ -830,6 +856,20 @@ export default function ReportPage() {
     report.ai_status_message ||
     report.target_info?.ai_status_message
   );
+
+  if (loading && id && id !== 'demo-fintech') {
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-28 flex flex-col items-center justify-center text-center space-y-4">
+        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        <div className="space-y-1.5">
+          <h2 className="text-lg font-medium text-white">Aggregating Security Audit Report...</h2>
+          <p className="text-xs font-mono text-[#71717a] max-w-md">
+            The scanner is finalizing findings, correlating CVEs, and computing posture metrics. Results will appear automatically.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
