@@ -209,12 +209,28 @@ export interface LoginPayload {
   password: string;
 }
 
-const API_HOST = (
-  (import.meta.env.VITE_API_URL as string | undefined) ||
-  (import.meta.env.VITE_BACKEND_URL as string | undefined) ||
-  ''
-).trim().replace(/\/$/, '');
-export const API_BASE = API_HOST ? `${API_HOST}/api/v1` : '/api/v1';
+function resolveApiBase(): string {
+  const envUrl = (
+    (import.meta.env.VITE_API_URL as string | undefined) ||
+    (import.meta.env.VITE_BACKEND_URL as string | undefined) ||
+    ''
+  ).trim();
+
+  if (!envUrl) {
+    return '/api/v1';
+  }
+
+  const cleanUrl = envUrl.replace(/\/+$/, '');
+  if (cleanUrl.endsWith('/api/v1')) {
+    return cleanUrl;
+  }
+  if (cleanUrl.endsWith('/api')) {
+    return `${cleanUrl}/v1`;
+  }
+  return `${cleanUrl}/api/v1`;
+}
+
+export const API_BASE = resolveApiBase();
 const TOKEN_KEY = 'geist_auth_token';
 const USER_KEY = 'geist_auth_user';
 
