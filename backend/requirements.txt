@@ -30,6 +30,9 @@ PyYAML>=6.0.0
 # --- Multipart Form Data & File Ingestion ---
 python-multipart>=0.0.9
 
+# --- Authentication & Tokens ---
+PyJWT>=2.8.0,<3.0.0
+
 # --- Testing & Code Quality Assurance (Development) ---
 pytest>=8.0.0
 pytest-asyncio>=0.23.0

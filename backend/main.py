@@ -1,12 +1,22 @@
 import os
 import sys
+import types
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-# Ensure root directory is in sys.path for absolute 'backend.*' imports on serverless platforms
-_ROOT_DIR = Path(__file__).resolve().parent.parent
-if str(_ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(_ROOT_DIR))
+# Ensure root directory is in sys.path and virtual 'backend' package exists
+_CURRENT_DIR = Path(__file__).resolve().parent
+_ROOT_DIR = _CURRENT_DIR.parent
+
+for p in [str(_ROOT_DIR), str(_CURRENT_DIR)]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
+if "backend" not in sys.modules:
+    pkg = types.ModuleType("backend")
+    pkg.__path__ = [str(_CURRENT_DIR)]
+    pkg.__file__ = str(_CURRENT_DIR / "__init__.py")
+    sys.modules["backend"] = pkg
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
