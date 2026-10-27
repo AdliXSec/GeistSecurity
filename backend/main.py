@@ -51,10 +51,24 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_origin_regex=r".*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    import traceback
+    err_tb = traceback.format_exc()
+    print(f"[ERROR] Unhandled exception on {request.method} {request.url.path}: {err_tb}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": f"{type(exc).__name__}: {str(exc)}",
+            "path": request.url.path,
+        },
+    )
 
 @app.middleware("http")
 async def normalize_double_api_middleware(request: Request, call_next):

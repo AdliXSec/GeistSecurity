@@ -4,53 +4,76 @@ import json
 from typing import Optional, List, Dict, Any
 from backend.config import settings
 
-async def init_db():
-    db_dir = os.path.dirname(settings.DATABASE_PATH)
-    if db_dir and not os.path.exists(db_dir):
-        os.makedirs(db_dir, exist_ok=True)
+async def _execute_schema(db: aiosqlite.Connection):
+    try:
+        await db.execute("PRAGMA journal_mode = DELETE;")
+        await db.execute("PRAGMA synchronous = NORMAL;")
+    except Exception:
+        pass
 
-    async with aiosqlite.connect(settings.DATABASE_PATH) as db:
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS audits (
-                session_id TEXT PRIMARY KEY,
-                user_id TEXT,
-                project_name TEXT NOT NULL,
-                mode TEXT NOT NULL,
-                status TEXT NOT NULL,
-                target_url TEXT,
-                github_repo_url TEXT,
-                branch TEXT DEFAULT 'main',
-                score INTEGER DEFAULT 0,
-                grade TEXT DEFAULT 'D',
-                grade_label TEXT DEFAULT '',
-                critical_count INTEGER DEFAULT 0,
-                high_count INTEGER DEFAULT 0,
-                duration_ms INTEGER DEFAULT 0,
-                report_json TEXT,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            );
-        """)
+    await db.execute("""
+        CREATE TABLE IF NOT EXISTS audits (
+            session_id TEXT PRIMARY KEY,
+            user_id TEXT,
+            project_name TEXT NOT NULL,
+            mode TEXT NOT NULL,
+            status TEXT NOT NULL,
+            target_url TEXT,
+            github_repo_url TEXT,
+            branch TEXT DEFAULT 'main',
+            score INTEGER DEFAULT 0,
+            grade TEXT DEFAULT 'D',
+            grade_label TEXT DEFAULT '',
+            critical_count INTEGER DEFAULT 0,
+            high_count INTEGER DEFAULT 0,
+            duration_ms INTEGER DEFAULT 0,
+            report_json TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        );
+    """)
 
-        # Migration: ensure user_id column exists if table was already created
+    # Migration: ensure user_id column exists if table was already created
+    try:
         async with db.execute("PRAGMA table_info(audits)") as cursor:
             columns = [row[1] for row in await cursor.fetchall()]
             if "user_id" not in columns:
                 await db.execute("ALTER TABLE audits ADD COLUMN user_id TEXT;")
+    except Exception:
+        pass
 
+    try:
         await db.execute("CREATE INDEX IF NOT EXISTS idx_audits_user_id ON audits (user_id);")
+    except Exception:
+        pass
 
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id TEXT PRIMARY KEY,
-                username TEXT UNIQUE NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
-                full_name TEXT,
-                created_at TEXT NOT NULL
-            );
-        """)
-        await db.commit()
+    await db.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            full_name TEXT,
+            created_at TEXT NOT NULL
+        );
+    """)
+    await db.commit()
+
+async def init_db():
+    target_path = settings.DATABASE_PATH
+    try:
+        db_dir = os.path.dirname(target_path)
+        if db_dir and not os.path.exists(db_dir):
+            os.makedirs(db_dir, exist_ok=True)
+        async with aiosqlite.connect(target_path) as db:
+            await _execute_schema(db)
+    except Exception:
+        if target_path != "/tmp/secaudit.db":
+            settings.DATABASE_PATH = "/tmp/secaudit.db"
+            async with aiosqlite.connect("/tmp/secaudit.db") as db:
+                await _execute_schema(db)
+        else:
+            raise
 
 async def get_db():
     await init_db()

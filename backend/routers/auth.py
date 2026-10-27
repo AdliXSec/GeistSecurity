@@ -103,7 +103,14 @@ async def register(req: UserRegisterRequest):
     clean_email = req.email.lower().strip()
 
     # Check if username exists
-    existing_user = await get_user_by_username_or_email(clean_username)
+    try:
+        existing_user = await get_user_by_username_or_email(clean_username)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database lookup error (user): {type(e).__name__}: {str(e)}",
+        )
+
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -111,7 +118,14 @@ async def register(req: UserRegisterRequest):
         )
 
     # Check if email exists
-    existing_email = await get_user_by_username_or_email(clean_email)
+    try:
+        existing_email = await get_user_by_username_or_email(clean_email)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database lookup error (email): {type(e).__name__}: {str(e)}",
+        )
+
     if existing_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -122,16 +136,28 @@ async def register(req: UserRegisterRequest):
     pw_hash = hash_password(req.password)
     now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-    created = await create_user(
-        user_id=user_id,
-        username=clean_username,
-        email=clean_email,
-        password_hash=pw_hash,
-        full_name=req.full_name.strip() if req.full_name else None,
-        created_at=now_iso,
-    )
+    try:
+        created = await create_user(
+            user_id=user_id,
+            username=clean_username,
+            email=clean_email,
+            password_hash=pw_hash,
+            full_name=req.full_name.strip() if req.full_name else None,
+            created_at=now_iso,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error creating user: {type(e).__name__}: {str(e)}",
+        )
 
-    token = create_access_token(user_id=user_id, username=clean_username)
+    try:
+        token = create_access_token(user_id=user_id, username=clean_username)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating token: {type(e).__name__}: {str(e)}",
+        )
 
     return AuthTokenResponse(
         access_token=token,
@@ -151,7 +177,13 @@ async def login(req: UserLoginRequest):
     Authenticate an operator with username/email and password.
     """
     identifier = req.username_or_email.lower().strip()
-    user = await get_user_by_username_or_email(identifier)
+    try:
+        user = await get_user_by_username_or_email(identifier)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database lookup error during login: {type(e).__name__}: {str(e)}",
+        )
 
     if not user or not verify_password(req.password, user["password_hash"]):
         raise HTTPException(
