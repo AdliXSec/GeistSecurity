@@ -1,8 +1,37 @@
 import os
 import aiosqlite
 import json
+import logging
+import httpx
 from typing import Optional, List, Dict, Any
 from backend.config import settings
+
+logger = logging.getLogger("secaudit.database")
+
+def is_supabase_enabled(ignore_test: bool = False) -> bool:
+    """Memeriksa apakah konfigurasi Supabase (URL dan API Key) aktif.
+    Dinonaktifkan saat unit test pytest berjalan untuk mencegah polusi data test ke cloud database.
+    """
+    if not ignore_test and "PYTEST_CURRENT_TEST" in os.environ:
+        return False
+    return bool(settings.SUPABASE_URL and settings.SUPABASE_KEY)
+
+def _supabase_headers() -> Dict[str, str]:
+    """Header otentikasi standar PostgREST Supabase."""
+    return {
+        "apikey": settings.SUPABASE_KEY,
+        "Authorization": f"Bearer {settings.SUPABASE_KEY}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+
+def _supabase_url(endpoint: str) -> str:
+    """Helper untuk memformat endpoint REST Supabase."""
+    base = settings.SUPABASE_URL.rstrip("/")
+    if base.endswith("/rest/v1"):
+        base = base[:-8].rstrip("/")
+    path = endpoint.lstrip("/")
+    return f"{base}/rest/v1/{path}"
 
 async def _execute_schema(db: aiosqlite.Connection):
     try:
@@ -82,6 +111,51 @@ async def _execute_schema(db: aiosqlite.Connection):
         pass
 
 async def init_db():
+    if is_supabase_enabled():
+        try:
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                res = await client.get(
+                    _supabase_url("audits?select=session_id&limit=1"),
+                    headers=_supabase_headers()
+                )
+                if res.status_code == 200:
+                    rows = res.json()
+                    if len(rows) == 0:
+                        now_iso = "2026-10-24T02:15:22Z"
+                        demo_payload = {
+                            "session_id": "demo-fintech",
+                            "user_id": None,
+                            "project_name": "Fintech Payment Core",
+                            "mode": "HYBRID",
+                            "status": "COMPLETED",
+                            "target_url": "https://demo-fintech.auraglass.io",
+                            "github_repo_url": "https://github.com/auraglass/fintech-core",
+                            "branch": "main",
+                            "score": 38,
+                            "grade": "D",
+                            "grade_label": "Grade D (38/100)",
+                            "critical_count": 3,
+                            "high_count": 3,
+                            "duration_ms": 24200,
+                            "created_at": now_iso,
+                            "updated_at": now_iso
+                        }
+                        await client.post(
+                            _supabase_url("audits"),
+                            headers={**_supabase_headers(), "Prefer": "resolution=merge-duplicates"},
+                            json=demo_payload
+                        )
+                    logger.info("[Database] Sukses terhubung ke Supabase Cloud Database.")
+                    return
+                elif res.status_code in [404, 400]:
+                    logger.warning(
+                        "[Supabase] Tabel belum ditemukan di Supabase. Silakan jalankan supabase_schema.sql di SQL Editor Supabase."
+                    )
+        except Exception as e:
+            logger.error(f"[Supabase] Gagal inisialisasi koneksi Supabase: {e}")
+        return
+
+    # Fallback ke SQLite lokal
     target_path = settings.DATABASE_PATH
     try:
         db_dir = os.path.dirname(target_path)
@@ -120,6 +194,41 @@ async def save_audit(
     report_json: Optional[Dict[str, Any]] = None,
     user_id: Optional[str] = None,
 ):
+    if is_supabase_enabled():
+        report_str = json.dumps(report_json) if report_json else None
+        payload = {
+            "session_id": session_id,
+            "user_id": user_id,
+            "project_name": project_name,
+            "mode": mode,
+            "status": status,
+            "target_url": target_url,
+            "github_repo_url": github_repo_url,
+            "branch": branch,
+            "score": score,
+            "grade": grade,
+            "grade_label": grade_label,
+            "critical_count": critical_count,
+            "high_count": high_count,
+            "duration_ms": duration_ms,
+            "report_json": report_str,
+            "created_at": created_at,
+            "updated_at": updated_at
+        }
+        headers = {
+            **_supabase_headers(),
+            "Prefer": "resolution=merge-duplicates"
+        }
+        try:
+            async with httpx.AsyncClient(timeout=12.0) as client:
+                res = await client.post(_supabase_url("audits"), headers=headers, json=payload)
+                if res.status_code in [200, 201, 204]:
+                    return
+                logger.error(f"[Supabase] Gagal menyimpan audit ({res.status_code}): {res.text}")
+        except Exception as e:
+            logger.error(f"[Supabase] Exception saat menyimpan audit: {e}")
+
+    # Fallback / lokal SQLite
     await init_db()
     async with aiosqlite.connect(settings.DATABASE_PATH) as db:
         report_str = json.dumps(report_json) if report_json else None
@@ -151,6 +260,26 @@ async def save_audit(
         await db.commit()
 
 async def get_audit(session_id: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    if is_supabase_enabled():
+        try:
+            query_params = f"session_id=eq.{session_id}"
+            if user_id:
+                query_params += f"&or=(user_id.eq.{user_id},user_id.is.null)"
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.get(_supabase_url(f"audits?{query_params}"), headers=_supabase_headers())
+                if res.status_code == 200:
+                    rows = res.json()
+                    if rows:
+                        data = dict(rows[0])
+                        if data.get("report_json"):
+                            try:
+                                data["report"] = json.loads(data["report_json"])
+                            except Exception:
+                                data["report"] = None
+                        return data
+        except Exception as e:
+            logger.error(f"[Supabase] Error saat get_audit: {e}")
+
     await init_db()
     async with aiosqlite.connect(settings.DATABASE_PATH) as db:
         db.row_factory = aiosqlite.Row
@@ -170,6 +299,19 @@ async def get_audit(session_id: str, user_id: Optional[str] = None) -> Optional[
             return data
 
 async def list_audits(user_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    if is_supabase_enabled():
+        try:
+            cols = "session_id,user_id,project_name,mode,status,score,grade,grade_label,critical_count,high_count,target_url,github_repo_url,branch,duration_ms,created_at"
+            query_params = f"select={cols}&order=created_at.desc&limit={limit}"
+            if user_id:
+                query_params += f"&user_id=eq.{user_id}"
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.get(_supabase_url(f"audits?{query_params}"), headers=_supabase_headers())
+                if res.status_code == 200:
+                    return res.json()
+        except Exception as e:
+            logger.error(f"[Supabase] Error saat list_audits: {e}")
+
     await init_db()
     async with aiosqlite.connect(settings.DATABASE_PATH) as db:
         db.row_factory = aiosqlite.Row
@@ -192,6 +334,20 @@ async def list_audits(user_id: Optional[str] = None, limit: int = 50) -> List[Di
             return [dict(r) for r in rows]
 
 async def delete_audit(session_id: str, user_id: Optional[str] = None) -> bool:
+    if is_supabase_enabled():
+        try:
+            headers = {**_supabase_headers(), "Prefer": "return=representation"}
+            query_params = f"session_id=eq.{session_id}"
+            if user_id:
+                query_params += f"&user_id=eq.{user_id}"
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.delete(_supabase_url(f"audits?{query_params}"), headers=headers)
+                if res.status_code == 200:
+                    deleted = res.json()
+                    return len(deleted) > 0
+        except Exception as e:
+            logger.error(f"[Supabase] Error saat delete_audit: {e}")
+
     await init_db()
     async with aiosqlite.connect(settings.DATABASE_PATH) as db:
         if user_id:
@@ -204,6 +360,20 @@ async def delete_audit(session_id: str, user_id: Optional[str] = None) -> bool:
 async def delete_audits_batch(session_ids: list[str], user_id: Optional[str] = None) -> int:
     if not session_ids:
         return 0
+    if is_supabase_enabled():
+        try:
+            ids_joined = ",".join(session_ids)
+            headers = {**_supabase_headers(), "Prefer": "return=representation"}
+            query_params = f"session_id=in.({ids_joined})"
+            if user_id:
+                query_params += f"&user_id=eq.{user_id}"
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.delete(_supabase_url(f"audits?{query_params}"), headers=headers)
+                if res.status_code == 200:
+                    return len(res.json())
+        except Exception as e:
+            logger.error(f"[Supabase] Error saat delete_audits_batch: {e}")
+
     await init_db()
     async with aiosqlite.connect(settings.DATABASE_PATH) as db:
         placeholders = ",".join("?" for _ in session_ids)
@@ -232,6 +402,38 @@ async def create_user(
     full_name: Optional[str],
     created_at: str,
 ) -> Dict[str, Any]:
+    clean_username = username.lower().strip()
+    clean_email = email.lower().strip()
+
+    if is_supabase_enabled():
+        payload = {
+            "id": user_id,
+            "username": clean_username,
+            "email": clean_email,
+            "password_hash": password_hash,
+            "full_name": full_name,
+            "created_at": created_at
+        }
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.post(
+                    _supabase_url("users"),
+                    headers={**_supabase_headers(), "Prefer": "return=representation"},
+                    json=payload
+                )
+                if res.status_code in [200, 201]:
+                    return {
+                        "id": user_id,
+                        "username": clean_username,
+                        "email": clean_email,
+                        "full_name": full_name,
+                        "created_at": created_at,
+                    }
+                else:
+                    logger.error(f"[Supabase] Gagal create_user: {res.status_code} - {res.text}")
+        except Exception as e:
+            logger.error(f"[Supabase] Exception create_user: {e}")
+
     await init_db()
     async with aiosqlite.connect(settings.DATABASE_PATH) as db:
         await db.execute(
@@ -239,18 +441,28 @@ async def create_user(
             INSERT INTO users (id, username, email, password_hash, full_name, created_at)
             VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (user_id, username.lower().strip(), email.lower().strip(), password_hash, full_name, created_at),
+            (user_id, clean_username, clean_email, password_hash, full_name, created_at),
         )
         await db.commit()
     return {
         "id": user_id,
-        "username": username.lower().strip(),
-        "email": email.lower().strip(),
+        "username": clean_username,
+        "email": clean_email,
         "full_name": full_name,
         "created_at": created_at,
     }
 
 async def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
+    if is_supabase_enabled():
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.get(_supabase_url(f"users?id=eq.{user_id}"), headers=_supabase_headers())
+                if res.status_code == 200:
+                    rows = res.json()
+                    return dict(rows[0]) if rows else None
+        except Exception as e:
+            logger.error(f"[Supabase] Error get_user_by_id: {e}")
+
     await init_db()
     async with aiosqlite.connect(settings.DATABASE_PATH) as db:
         db.row_factory = aiosqlite.Row
@@ -259,8 +471,21 @@ async def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
             return dict(row) if row else None
 
 async def get_user_by_username_or_email(identifier: str) -> Optional[Dict[str, Any]]:
-    await init_db()
     clean_id = identifier.lower().strip()
+    if is_supabase_enabled():
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.get(
+                    _supabase_url(f"users?or=(username.eq.{clean_id},email.eq.{clean_id})"),
+                    headers=_supabase_headers()
+                )
+                if res.status_code == 200:
+                    rows = res.json()
+                    return dict(rows[0]) if rows else None
+        except Exception as e:
+            logger.error(f"[Supabase] Error get_user_by_username_or_email: {e}")
+
+    await init_db()
     async with aiosqlite.connect(settings.DATABASE_PATH) as db:
         db.row_factory = aiosqlite.Row
         async with db.execute(

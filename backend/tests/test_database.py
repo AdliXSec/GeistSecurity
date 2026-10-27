@@ -84,5 +84,28 @@ class TestDatabaseOperations(unittest.IsolatedAsyncioTestCase):
         for sid in sids:
             self.assertIsNone(await get_audit(sid))
 
+    async def test_supabase_helper_functions(self):
+        from backend.database import is_supabase_enabled, _supabase_headers, _supabase_url
+        from backend.config import settings
+
+        # By default in test environment, Supabase URL is empty
+        prev_url = settings.SUPABASE_URL
+        prev_key = settings.SUPABASE_KEY
+        try:
+            settings.SUPABASE_URL = ""
+            settings.SUPABASE_KEY = ""
+            self.assertFalse(is_supabase_enabled())
+
+            settings.SUPABASE_URL = "https://exampleproj.supabase.co"
+            settings.SUPABASE_KEY = "test-service-key"
+            self.assertTrue(is_supabase_enabled(ignore_test=True))
+            self.assertEqual(_supabase_url("audits"), "https://exampleproj.supabase.co/rest/v1/audits")
+            headers = _supabase_headers()
+            self.assertEqual(headers["apikey"], "test-service-key")
+            self.assertEqual(headers["Authorization"], "Bearer test-service-key")
+        finally:
+            settings.SUPABASE_URL = prev_url
+            settings.SUPABASE_KEY = prev_key
+
 if __name__ == "__main__":
     unittest.main()

@@ -12,6 +12,10 @@ reports/
 .env.*
 *.env
 *.env.local
+!.env.example
+!*.env.example
+!backend/.env.example
+!frontend/.env.example
 *.pem
 *.key
 
