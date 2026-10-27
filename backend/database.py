@@ -59,6 +59,28 @@ async def _execute_schema(db: aiosqlite.Connection):
     """)
     await db.commit()
 
+    try:
+        async with db.execute("SELECT COUNT(*) FROM audits") as cursor:
+            row = await cursor.fetchone()
+            if row and row[0] == 0:
+                now_iso = "2026-10-24T02:15:22Z"
+                await db.execute("""
+                    INSERT INTO audits (
+                        session_id, user_id, project_name, mode, status,
+                        target_url, github_repo_url, branch,
+                        score, grade, grade_label, critical_count, high_count, duration_ms,
+                        created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    "demo-fintech", None, "Fintech Payment Core", "HYBRID", "COMPLETED",
+                    "https://demo-fintech.auraglass.io", "https://github.com/auraglass/fintech-core", "main",
+                    38, "D", "Grade D (38/100)", 3, 3, 24200,
+                    now_iso, now_iso
+                ))
+                await db.commit()
+    except Exception:
+        pass
+
 async def init_db():
     target_path = settings.DATABASE_PATH
     try:

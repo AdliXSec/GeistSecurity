@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { getStoredToken, API_BASE } from '../lib/api';
 
 interface Stage {
@@ -228,8 +228,16 @@ const getStageTag = (stage: string) => {
 export default function ProgressPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [auditMode, setAuditMode] = useState<'WHITEBOX' | 'BLACKBOX' | 'HYBRID'>('WHITEBOX');
+  const navStateMode = (location.state as any)?.mode;
+  const queryMode = new URLSearchParams(location.search).get('mode');
+  const initialMode = ((navStateMode || queryMode || 'BLACKBOX') as string).toUpperCase() as
+    | 'WHITEBOX'
+    | 'BLACKBOX'
+    | 'HYBRID';
+
+  const [auditMode, setAuditMode] = useState<'WHITEBOX' | 'BLACKBOX' | 'HYBRID'>(initialMode);
   const [progress, setProgress] = useState(15);
   const [elapsedTime, setElapsedTime] = useState(0.0);
   const [eventsCount, setEventsCount] = useState(18);
@@ -240,10 +248,10 @@ export default function ProgressPage() {
   const [streamConnected, setStreamConnected] = useState(false);
 
   const [narrative, setNarrative] = useState(
-    'Initializing workspace and SAST module. Preparing AST tree parser & OSV.dev vulnerability database...'
+    'Initializing workspace and security pipeline. Preparing scan engine & vulnerability databases...'
   );
 
-  const [stages, setStages] = useState<Stage[]>(() => getStagesForMode('WHITEBOX'));
+  const [stages, setStages] = useState<Stage[]>(() => getStagesForMode(initialMode));
 
   const [logs, setLogs] = useState<LogEntry[]>([
     {
@@ -256,14 +264,15 @@ export default function ProgressPage() {
     {
       id: 2,
       time: '0.4s',
-      tag: '[AST:READY]',
+      tag: '[ENGINE:READY]',
       tagColor: 'text-blue-400',
-      message: 'Preparing AST parser & dependency vulnerability scanner...',
+      message: 'Preparing security pipeline & vulnerability scanner...',
     },
   ]);
 
   const eventSourceRef = useRef<EventSource | null>(null);
   const elapsedTimeRef = useRef<number>(0.0);
+  const lastEventTimeRef = useRef<number>(0);
 
   // Connect to SSE stream & Polling Fallback
   useEffect(() => {
@@ -300,6 +309,7 @@ export default function ProgressPage() {
 
     const handleEventData = (dataStr: string) => {
       if (isPaused || isTerminated) return;
+      lastEventTimeRef.current = Date.now();
       try {
         const data = JSON.parse(dataStr);
         setEventsCount((prev) => prev + 1);
@@ -440,9 +450,11 @@ export default function ProgressPage() {
         return next;
       });
 
-      // If stream is not connected (e.g. demo run), smoothly simulate progression
-      if (!streamConnected) {
+      const timeSinceLastEvent = Date.now() - lastEventTimeRef.current;
+      // If stream is not connected or idle (> 500ms without new event), smoothly advance events and stages
+      if (!streamConnected || timeSinceLastEvent > 500) {
         setSseRate(124 + Math.floor(Math.random() * 8));
+        setEventsCount((prev) => prev + 1);
         setProgress((prev) => {
           if (prev < 98) {
             const next = prev + 1;
@@ -848,7 +860,14 @@ export default function ProgressPage() {
             </span>
             <button
               type="button"
-              onClick={() => setIsPaused(!isPaused)}
+              onClick={() => {
+                if (isPaused) {
+                  setIsPaused(false);
+                  lastEventTimeRef.current = 0;
+                } else {
+                  setIsPaused(true);
+                }
+              }}
               className="px-2.5 py-1 rounded-lg bg-[#111113] border border-[#1e1e22] hover:bg-[#161618] text-xs font-mono text-[#d4d4d8] hover:text-white transition-all flex items-center gap-1.5"
             >
               {isPaused ? (

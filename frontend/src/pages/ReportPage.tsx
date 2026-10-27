@@ -229,6 +229,187 @@ const FALLBACK_REPORT: AuditReport = {
       },
     },
     {
+      id: 'f-recon-jquery-cve',
+      rule_id: 'OUTDATED-PKG-CVE-2015-9251',
+      category: 'TECH_AND_CVE',
+      severity: 'MEDIUM',
+      title: 'Client Library Component Vulnerable to CVE-2015-9251 (jQuery 2.1.4)',
+      cwe_id: 'CWE-79',
+      owasp_category: 'A06:2021-Vulnerable and Outdated Components',
+      cvss_score: 6.1,
+      location: {
+        source_origin: 'TECH_FINGERPRINT',
+        path: 'https://demo-fintech.auraglass.io/assets/jquery-2.1.4.min.js',
+        line_start: 1,
+        line_end: 1,
+      },
+      redacted_code_snippet: '/*! jQuery v2.1.4 | (c) 2005, 2015 jQuery Foundation, Inc. | jquery.org/license */',
+      evidence_metadata: {
+        component: 'jQuery',
+        version: '2.1.4',
+        cve: 'CVE-2015-9251',
+      },
+      ai_remediation: {
+        model: 'gemini-2.5-flash',
+        risk_explanation:
+          'jQuery before 3.0.0 is vulnerable to Cross-Site Scripting (CVE-2015-9251) via parseHTML which does not strip malicious executable scripts when parsing untrusted markup.',
+        remediation_steps: [
+          'Upgrade jQuery to version 3.5.0 or later (recommended 3.7.1).',
+          'Use modern native DOM APIs (fetch, querySelector) to reduce dependency on legacy client libraries.',
+        ],
+        code_patch: {
+          language: 'html',
+          original_code: '<script src="/assets/jquery-2.1.4.min.js"></script>',
+          patched_code: '<script src="/assets/jquery-3.7.1.min.js"></script>',
+        },
+      },
+    },
+    {
+      id: 'f-recon-cookie-flags',
+      rule_id: 'COOKIE-PROTECTION-FLAGS-MISSING',
+      category: 'MISCONFIG_DEFAULT',
+      severity: 'MEDIUM',
+      title: 'Missing Cookie Protection Flags (Secure, HttpOnly, SameSite)',
+      cwe_id: 'CWE-614',
+      owasp_category: 'A05:2021-Security Misconfiguration',
+      cvss_score: 5.4,
+      location: {
+        source_origin: 'DAST_HEADER_SCANNER',
+        path: 'Set-Cookie: session_id=a8f9c21b4e; Path=/;',
+        line_start: 1,
+        line_end: 1,
+      },
+      redacted_code_snippet: 'Set-Cookie: session_id=a8f9c21b4e; Path=/; Domain=demo-fintech.auraglass.io\n// Warning: Missing Secure, HttpOnly, and SameSite cookie protection flags',
+      evidence_metadata: {
+        cookie_name: 'session_id',
+        missing_flags: ['Secure', 'HttpOnly', 'SameSite'],
+        issue: 'Missing cookie protection flags enable session hijacking and CSRF vectors',
+      },
+      ai_remediation: {
+        model: 'gemini-2.5-flash',
+        risk_explanation:
+          'Session and authentication cookies transmitted without Secure, HttpOnly, and SameSite attributes can be intercepted over unencrypted channels or accessed via client-side cross-site scripting (XSS).',
+        remediation_steps: [
+          'Enforce HttpOnly flag on all session cookies to prevent access via document.cookie.',
+          'Set Secure flag so cookies are only transmitted over HTTPS connections.',
+          'Configure SameSite=Lax or SameSite=Strict to mitigate Cross-Site Request Forgery (CSRF).',
+        ],
+        code_patch: {
+          language: 'typescript',
+          original_code: "res.setHeader('Set-Cookie', 'session_id=' + token + '; Path=/');",
+          patched_code: "res.setHeader('Set-Cookie', 'session_id=' + token + '; Path=/; Secure; HttpOnly; SameSite=Lax');",
+        },
+      },
+    },
+    {
+      id: 'f-recon-security-headers',
+      rule_id: 'HTTP-SECURITY-HEADER-MISSING',
+      category: 'MISCONFIG_DEFAULT',
+      severity: 'MEDIUM',
+      title: 'Missing Passive HTTP Security Headers (Strict-Transport-Security, X-Frame-Options, X-Content-Type-Options)',
+      cwe_id: 'CWE-693',
+      owasp_category: 'A05:2021-Security Misconfiguration',
+      cvss_score: 5.8,
+      location: {
+        source_origin: 'DAST_HEADER_SCANNER',
+        path: 'HTTP Response Headers: https://demo-fintech.auraglass.io',
+        line_start: 1,
+        line_end: 1,
+      },
+      redacted_code_snippet: 'HTTP/1.1 200 OK\n// Missing passive HTTP security headers:\n// - Strict-Transport-Security (HSTS): MISSING\n// - X-Frame-Options: MISSING\n// - X-Content-Type-Options: MISSING\n// - Referrer-Policy: MISSING',
+      evidence_metadata: {
+        missing_headers: ['Strict-Transport-Security', 'X-Frame-Options', 'X-Content-Type-Options', 'Referrer-Policy'],
+        issue: 'Missing passive HTTP security headers weaken defense against clickjacking and MIME sniffing',
+      },
+      ai_remediation: {
+        model: 'gemini-2.5-flash',
+        risk_explanation:
+          'Missing defensive HTTP security headers expose web applications to clickjacking framing attacks, MIME-type sniffing, and SSL stripping vectors.',
+        remediation_steps: [
+          'Implement Strict-Transport-Security with max-age=31536000 and includeSubDomains.',
+          'Set X-Frame-Options to DENY or SAMEORIGIN to prevent framing clickjacking.',
+          'Set X-Content-Type-Options to nosniff to enforce MIME-type compliance.',
+        ],
+        code_patch: {
+          language: 'nginx',
+          original_code: '# nginx.conf\nserver {\n    listen 443 ssl;\n}',
+          patched_code: '# nginx.conf\nserver {\n    listen 443 ssl;\n    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;\n    add_header X-Frame-Options "SAMEORIGIN" always;\n    add_header X-Content-Type-Options "nosniff" always;\n    add_header Referrer-Policy "strict-origin-when-cross-origin" always;\n}',
+        },
+      },
+    },
+    {
+      id: 'f-recon-csp-weakness',
+      rule_id: 'HTTP-MISSING-CSP',
+      category: 'MISCONFIG_DEFAULT',
+      severity: 'HIGH',
+      title: 'Content Security Policy (CSP) Directives Missing & Unrestricted Script Execution',
+      cwe_id: 'CWE-1021',
+      owasp_category: 'A05:2021-Security Misconfiguration',
+      cvss_score: 7.2,
+      location: {
+        source_origin: 'DAST_HEADER_SCANNER',
+        path: 'Content-Security-Policy: [HEADER NOT DETECTED]',
+        line_start: 1,
+        line_end: 1,
+      },
+      redacted_code_snippet: 'HTTP/1.1 200 OK\nContent-Security-Policy: [HEADER NOT DETECTED]\n// Unrestricted script execution permitted without Content Security Policy protection',
+      evidence_metadata: {
+        header: 'Content-Security-Policy',
+        issue: 'Content Security Policy weakness allows unconstrained script injection and cross-site framing',
+      },
+      ai_remediation: {
+        model: 'gemini-2.5-flash',
+        risk_explanation:
+          'Absence of Content Security Policy (CSP) headers allows arbitrary third-party scripts, inline event handlers, and data URIs to execute in victim browsers.',
+        remediation_steps: [
+          "Define a restrictive Content-Security-Policy header with default-src 'self'.",
+          'Disallow unsafe-inline and unsafe-eval script sources.',
+          'Restrict connect-src to authorized API gateways only.',
+        ],
+        code_patch: {
+          language: 'nginx',
+          original_code: '# Missing Content-Security-Policy\nadd_header X-Frame-Options "SAMEORIGIN";',
+          patched_code: "add_header Content-Security-Policy \"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self';\" always;",
+        },
+      },
+    },
+    {
+      id: 'f-public-bundle-sink',
+      rule_id: 'PUBLIC-BUNDLE-UNSAFE-SINK-USAGE',
+      category: 'DOM_XSS',
+      severity: 'HIGH',
+      title: 'Public Client Bundle Inspection: URL-Derived Input Connected to Unsafe DOM Sink (innerHTML)',
+      cwe_id: 'CWE-79',
+      owasp_category: 'A03:2021-Injection',
+      cvss_score: 8.2,
+      location: {
+        source_origin: 'CLIENT_JS_BUNDLE_INSPECTION',
+        path: '/_next/static/chunks/main-app-8f2a.js',
+        line_start: 142,
+        line_end: 145,
+      },
+      redacted_code_snippet: 'const query = new URLSearchParams(window.location.search).get("q");\nelement.innerHTML = "<div>Search result: " + query + "</div>";',
+      evidence_metadata: {
+        source: 'window.location.search',
+        sink: 'element.innerHTML',
+        taint_flow: 'URL-derived query parameter flows into innerHTML sink without sanitization',
+      },
+      ai_remediation: {
+        model: 'gemini-2.5-flash',
+        risk_explanation:
+          'Client-side JavaScript extracts URL parameters from window.location.search and concatenates them directly into element.innerHTML, exposing users to client-side DOM XSS attacks.',
+        remediation_steps: [
+          'Use element.textContent instead of element.innerHTML when rendering user-supplied strings.',
+          'Sanitize markup with DOMPurify if HTML rendering is required.',
+        ],
+        code_patch: {
+          language: 'javascript',
+          original_code: 'element.innerHTML = "<div>Search result: " + query + "</div>";',
+          patched_code: 'element.textContent = "Search result: " + (query || "");',
+        },
+      },
+    },
+    {
       id: 'f-recon-html-comment',
       rule_id: 'HTML-SENSITIVE-COMMENT-LEAK',
       category: 'HTML_METADATA',
@@ -455,6 +636,7 @@ export default function ReportPage() {
   const [copiedPatchId, setCopiedPatchId] = useState<string | null>(null);
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [moduleFilter, setModuleFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Interactive Patch Simulation: Track which findings are simulated as patched
@@ -569,12 +751,61 @@ export default function ReportPage() {
   // Filtered findings list
   const filteredFindings = report.findings.filter((f) => {
     const matchSev = severityFilter === 'all' || f.severity.toLowerCase() === severityFilter.toLowerCase();
-    const matchMod =
-      moduleFilter === 'all' ||
-      f.category.toLowerCase() === moduleFilter.toLowerCase() ||
-      (moduleFilter === 'NUCLEI' &&
-        (f.location?.source_origin?.includes('NUCLEI') || f.rule_id?.startsWith('nuclei-')));
-    return matchSev && matchMod;
+
+    // Module categorization matching
+    let matchMod = moduleFilter === 'all';
+    if (moduleFilter !== 'all') {
+      const fCat = (f.category || '').toLowerCase();
+      const filterKey = moduleFilter.toLowerCase();
+      if (filterKey === 'tech_and_cve') {
+        matchMod =
+          fCat === 'tech_and_cve' ||
+          fCat === 'cve_dependency' ||
+          fCat === 'vulnerable_dependency' ||
+          fCat === 'sca' ||
+          Boolean(f.evidence_metadata?.cve) ||
+          Boolean(f.rule_id?.toUpperCase().includes('CVE')) ||
+          Boolean(f.title?.toUpperCase().includes('CVE'));
+      } else if (filterKey === 'misconfig_default') {
+        matchMod =
+          fCat === 'misconfig_default' ||
+          fCat === 'dast_header' ||
+          fCat.includes('misconfig') ||
+          Boolean(f.rule_id?.toUpperCase().includes('COOKIE')) ||
+          Boolean(f.rule_id?.toUpperCase().includes('HEADER')) ||
+          Boolean(f.rule_id?.toUpperCase().includes('CSP')) ||
+          Boolean(f.owasp_category?.toLowerCase().includes('misconfiguration'));
+      } else if (filterKey === 'nuclei') {
+        matchMod = Boolean(f.location?.source_origin?.includes('NUCLEI') || f.rule_id?.startsWith('nuclei-'));
+      } else {
+        matchMod = fCat === filterKey || fCat.includes(filterKey);
+      }
+    }
+
+    // Search query matching across title, rule_id, CWE, OWASP, snippet, and risk explanation
+    let matchSearch = true;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const blob = [
+        f.title,
+        f.rule_id,
+        f.category,
+        f.severity,
+        f.cwe_id,
+        f.owasp_category,
+        f.location?.path,
+        f.redacted_code_snippet,
+        f.ai_remediation?.risk_explanation,
+        f.evidence_metadata ? JSON.stringify(f.evidence_metadata) : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      matchSearch = blob.includes(q);
+    }
+
+    return matchSev && matchMod && matchSearch;
   });
 
   const radius = 50;
@@ -1522,6 +1753,28 @@ export default function ReportPage() {
             </button>
           ))}
         </div>
+
+        {/* Search findings input */}
+        <div className="relative pt-1">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search findings (e.g. cookie, security header, Content Security Policy, CVE, port)..."
+            aria-label="Search findings"
+            data-testid="findings-search-input"
+            className="w-full bg-[#0a0a0a] border border-[#1e1e22] focus:border-[#3f3f46] rounded-xl px-4 py-2 text-xs font-mono text-white placeholder-[#71717a] outline-none transition-all shadow-inner"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-3 text-xs font-mono text-[#71717a] hover:text-white"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Findings List */}
@@ -1559,6 +1812,20 @@ export default function ReportPage() {
                     <span className="px-2 py-0.5 rounded-full border border-[#1e1e22] bg-[#111113] text-[#71717a]">
                       {finding.cwe_id}
                     </span>
+                    {(() => {
+                      const cveMatch =
+                        finding.evidence_metadata?.cve ||
+                        finding.rule_id?.match(/CVE-\d{4}-\d+/i)?.[0] ||
+                        finding.title?.match(/CVE-\d{4}-\d+/i)?.[0];
+                      if (cveMatch) {
+                        return (
+                          <span className="px-2 py-0.5 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-400 font-semibold font-mono text-[10px]">
+                            {cveMatch}
+                          </span>
+                        );
+                      }
+                      return null;
+                    })()}
                     {(finding.location?.source_origin?.includes('NUCLEI') || finding.rule_id?.startsWith('nuclei-')) && (
                       <span className="px-2 py-0.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-semibold text-[10px]">
                         {finding.location?.source_origin === 'RECON_AND_NUCLEI' ? 'RECON + NUCLEI' : 'NUCLEI DAST'}

@@ -432,6 +432,30 @@ def scan_tech_and_cve(
                 "simulated_demo": True
             }
         })
+        findings.append({
+            "id": "bb-cve-jquery-cve-2015-9251",
+            "rule_id": "UNPATCHED-JQUERY-CVE",
+            "category": "TECH_AND_CVE",
+            "severity": "MEDIUM",
+            "title": "jQuery Outdated Version Rentan Cross-Site Scripting (CVE-2015-9251)",
+            "cwe_id": "CWE-79",
+            "owasp_category": "A06:2021-Vulnerable and Outdated Components",
+            "cvss_score": 6.1,
+            "location": {
+                "source_origin": "TECH_FINGERPRINT_CVE",
+                "path": f"{target_url} (Assets: jquery-2.1.4.min.js)",
+                "line_start": 1,
+                "line_end": 1
+            },
+            "redacted_code_snippet": "jQuery v2.1.4\nVulnerable: CVE-2015-9251 (CVSS 6.1)\nparseHTML mengizinkan eksekusi script berbahaya.",
+            "evidence_metadata": {
+                "component": "jquery",
+                "version": "2.1.4",
+                "cve": "CVE-2015-9251",
+                "cvss": 6.1,
+                "simulated_demo": True
+            }
+        })
 
     return detected_tech, findings
 
@@ -964,6 +988,29 @@ async def scan_js_assets_and_secrets(
             }
         })
         findings.append({
+            "id": "bb-js-sink-demo",
+            "rule_id": "PUBLIC-BUNDLE-UNSAFE-SINK-USAGE",
+            "category": "DOM_XSS",
+            "severity": "HIGH",
+            "title": "Public Client Bundle Inspection: URL-Derived Input Connected to Unsafe DOM Sink (innerHTML)",
+            "cwe_id": "CWE-79",
+            "owasp_category": "A03:2021-Injection",
+            "cvss_score": 8.2,
+            "location": {
+                "source_origin": "CLIENT_JS_BUNDLE_INSPECTION",
+                "path": f"{target_url}/_next/static/chunks/main-app-8f2a.js",
+                "line_start": 142,
+                "line_end": 145
+            },
+            "redacted_code_snippet": "const query = new URLSearchParams(window.location.search).get(\"q\");\nelement.innerHTML = \"<div>Search result: \" + query + \"</div>\";",
+            "evidence_metadata": {
+                "source": "window.location.search",
+                "sink": "element.innerHTML",
+                "taint_flow": "URL-derived query parameter flows into innerHTML sink without sanitization",
+                "simulated_demo": True
+            }
+        })
+        findings.append({
             "id": "bb-js-smap-demo",
             "rule_id": "JS-SOURCE-MAP-EXPOSED",
             "category": "JS_CRAWLER_SECRET",
@@ -1346,7 +1393,7 @@ def scan_misconfigurations(
                     "rule_id": "COOKIE-INSECURE-FLAGS",
                     "category": "MISCONFIG_DEFAULT",
                     "severity": "MEDIUM",
-                    "title": f"Atribut Cookie Tidak Aman pada '{cookie.name}' ({', '.join(issues)})",
+                    "title": f"Missing Cookie Protection Flags (Secure, HttpOnly, SameSite) on '{cookie.name}' ({', '.join(issues)})",
                     "cwe_id": "CWE-614",
                     "owasp_category": "A05:2021-Security Misconfiguration",
                     "cvss_score": 5.3,
