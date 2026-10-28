@@ -52,7 +52,7 @@ const DEFAULT_PROJECTS: Project[] = [
     grade: 'D',
     gradeLabel: 'Grade D (38/100)',
     score: 38,
-    auditType: 'Hybrid Audit',
+    auditType: 'Hybrid Audit (DAST + SAST)',
     repo: 'https://demo-fintech.auraglass.io',
     branch: 'main',
     vulnSummary: '2 Critical, 1 High',
@@ -69,56 +69,6 @@ const DEFAULT_PROJECTS: Project[] = [
     hasSimulatePatch: true,
     criticalCount: 2,
     highCount: 1,
-    environment: 'Prod',
-  },
-  {
-    id: 'demo-ecommerce',
-    name: 'E-Commerce Storefront',
-    grade: 'B',
-    gradeLabel: 'Grade B (82/100)',
-    score: 82,
-    auditType: 'Blackbox DAST',
-    repo: 'https://store.demo.internal',
-    branch: 'main',
-    vulnSummary: '0 Critical, 1 High',
-    vulnColor: 'text-amber-400',
-    timeAgo: '1h ago',
-    scanDuration: '18.4s scan',
-    dotColor: 'bg-blue-400',
-    iconBg: 'bg-blue-500/10',
-    iconColor: 'text-blue-400',
-    iconType: 'shield',
-    gradeBg: 'bg-blue-500/15',
-    gradeColor: 'text-blue-400',
-    dotPing: false,
-    hasSimulatePatch: true,
-    criticalCount: 0,
-    highCount: 1,
-    environment: 'Staging',
-  },
-  {
-    id: 'demo-edge-api',
-    name: 'Edge API Gateway',
-    grade: 'A',
-    gradeLabel: 'Grade A (95/100)',
-    score: 95,
-    auditType: 'Whitebox SAST',
-    repo: 'https://github.com/auraglass/edge-api',
-    branch: 'main',
-    vulnSummary: 'Clean & Hardened (0 Findings)',
-    vulnColor: 'text-emerald-400',
-    timeAgo: '3h ago',
-    scanDuration: '14.1s scan',
-    dotColor: 'bg-emerald-400',
-    iconBg: 'bg-emerald-500/10',
-    iconColor: 'text-emerald-400',
-    iconType: 'check',
-    gradeBg: 'bg-emerald-500/15',
-    gradeColor: 'text-emerald-400',
-    dotPing: false,
-    hasSimulatePatch: false,
-    criticalCount: 0,
-    highCount: 0,
     environment: 'Prod',
   },
 ];
@@ -969,7 +919,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
           {/* Columns Toggle Dropdown */}
           <div className="relative" ref={columnsRef}>
             <button
@@ -1073,7 +1023,7 @@ export default function DashboardPage() {
       {/* ============================================================ */}
       {/*  2. Metrics Strip                                             */}
       {/* ============================================================ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
         {dynamicMetrics.map((m) => (
           <div
             key={m.label}
@@ -1167,9 +1117,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Filter & sort */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 max-w-full">
           {/* Severity tabs */}
-          <div className="flex items-center gap-1 bg-[#0a0a0a] border border-[#1e1e22] p-1 rounded-lg" data-testid="severity-tabs">
+          <div className="flex items-center gap-1 bg-[#0a0a0a] border border-[#1e1e22] p-1 rounded-lg overflow-x-auto max-w-full" data-testid="severity-tabs">
             {(['All', 'Critical', 'High', 'Medium', 'Low'] as SeverityFilter[]).map((sev) => (
               <button
                 key={sev}
@@ -1473,7 +1423,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Right section */}
-              <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-3 shrink-0">
+              <div className="flex flex-col sm:flex-row md:flex-col items-start sm:items-center md:items-end justify-between md:justify-center gap-2.5 sm:gap-3 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-[#1e1e22]/50 w-full md:w-auto">
                 {/* Time info */}
                 {visibleColumns.scanTime && (
                   <div className="flex items-center gap-2 text-[#71717a] text-[11px] font-mono">
@@ -1487,7 +1437,7 @@ export default function DashboardPage() {
                 )}
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-start sm:justify-end">
                   <Link
                     to={p.id ? `/audit/progress/${p.id}` : `/audit/progress/${encodeURIComponent(p.name)}`}
                     className="px-2.5 py-1.5 rounded-lg bg-[#111113] border border-[#1e1e22] hover:bg-[#161618] text-[#ededed] text-[11px] font-mono transition-colors flex items-center gap-1"

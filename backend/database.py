@@ -299,6 +299,7 @@ async def get_audit(session_id: str, user_id: Optional[str] = None) -> Optional[
             return data
 
 async def list_audits(user_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    supabase_records: List[Dict[str, Any]] = []
     if is_supabase_enabled():
         try:
             cols = "session_id,user_id,project_name,mode,status,score,grade,grade_label,critical_count,high_count,target_url,github_repo_url,branch,duration_ms,created_at"
@@ -308,30 +309,50 @@ async def list_audits(user_id: Optional[str] = None, limit: int = 50) -> List[Di
             async with httpx.AsyncClient(timeout=10.0) as client:
                 res = await client.get(_supabase_url(f"audits?{query_params}"), headers=_supabase_headers())
                 if res.status_code == 200:
-                    return res.json()
+                    data = res.json()
+                    if isinstance(data, list):
+                        supabase_records = data
         except Exception as e:
             logger.error(f"[Supabase] Error saat list_audits: {e}")
 
     await init_db()
-    async with aiosqlite.connect(settings.DATABASE_PATH) as db:
-        db.row_factory = aiosqlite.Row
-        if user_id:
-            query = (
-                "SELECT session_id, user_id, project_name, mode, status, score, grade, grade_label, "
-                "critical_count, high_count, target_url, github_repo_url, branch, duration_ms, created_at "
-                "FROM audits WHERE user_id = ? ORDER BY created_at DESC LIMIT ?"
-            )
-            params = (user_id, limit)
-        else:
-            query = (
-                "SELECT session_id, user_id, project_name, mode, status, score, grade, grade_label, "
-                "critical_count, high_count, target_url, github_repo_url, branch, duration_ms, created_at "
-                "FROM audits ORDER BY created_at DESC LIMIT ?"
-            )
-            params = (limit,)
-        async with db.execute(query, params) as cursor:
-            rows = await cursor.fetchall()
-            return [dict(r) for r in rows]
+    local_records: List[Dict[str, Any]] = []
+    try:
+        async with aiosqlite.connect(settings.DATABASE_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            if user_id:
+                query = (
+                    "SELECT session_id, user_id, project_name, mode, status, score, grade, grade_label, "
+                    "critical_count, high_count, target_url, github_repo_url, branch, duration_ms, created_at "
+                    "FROM audits WHERE user_id = ? ORDER BY created_at DESC LIMIT ?"
+                )
+                params = (user_id, limit)
+            else:
+                query = (
+                    "SELECT session_id, user_id, project_name, mode, status, score, grade, grade_label, "
+                    "critical_count, high_count, target_url, github_repo_url, branch, duration_ms, created_at "
+                    "FROM audits ORDER BY created_at DESC LIMIT ?"
+                )
+                params = (limit,)
+            async with db.execute(query, params) as cursor:
+                rows = await cursor.fetchall()
+                local_records = [dict(r) for r in rows]
+    except Exception as e:
+        logger.error(f"[SQLite] Error saat list_audits: {e}")
+
+    seen_ids = set()
+    merged: List[Dict[str, Any]] = []
+    for rec in supabase_records:
+        sid = rec.get("session_id")
+        if sid and sid not in seen_ids:
+            seen_ids.add(sid)
+            merged.append(rec)
+    for rec in local_records:
+        sid = rec.get("session_id")
+        if sid and sid not in seen_ids:
+            seen_ids.add(sid)
+            merged.append(rec)
+    return merged[:limit]
 
 async def delete_audit(session_id: str, user_id: Optional[str] = None) -> bool:
     if is_supabase_enabled():

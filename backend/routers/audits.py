@@ -805,11 +805,10 @@ async def get_audit_status(session_id: str, user: Optional[dict] = Depends(get_c
 )
 async def get_audits_list(user: Optional[dict] = Depends(get_current_user_optional)):
     """
-    Mengambil riwayat sesi audit untuk Dashboard. Hanya mengembalikan sesi milik operator yang sedang aktif.
+    Mengambil riwayat sesi audit untuk Dashboard. Mengembalikan sesi milik operator aktif, atau seluruh sesi lokal jika mode single-user/local.
     """
-    if not user:
-        return []
-    audits = await list_audits(user_id=user["id"], limit=50)
+    user_id = user["id"] if user else None
+    audits = await list_audits(user_id=user_id, limit=50)
     return audits
 
 @router.delete(
