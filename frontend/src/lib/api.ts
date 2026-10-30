@@ -12,6 +12,10 @@ export interface AuditCreateRequest {
   js_exposure?: boolean;
   enable_nuclei?: boolean;
   nuclei_profile?: 'quick' | 'full';
+  auth_token?: string;
+  auth_cookie_string?: string;
+  auth_headers?: Record<string, string>;
+  auth_cookies?: Record<string, string>;
 }
 
 export interface AuditCreateResponse {
@@ -34,6 +38,8 @@ export interface TargetInfo {
   enable_nuclei?: boolean;
   nuclei_profile?: 'quick' | 'full';
   nuclei_findings_count?: number;
+  auth_headers?: Record<string, string>;
+  auth_cookies?: Record<string, string>;
 }
 
 export interface SummaryCounts {
@@ -139,6 +145,15 @@ export interface JsAssetItem {
   sub_chunks: string[];
 }
 
+export interface DiscoveredParamItem {
+  name: string;
+  param_type: string;
+  endpoint: string;
+  risk_category: string;
+  severity: string;
+  description?: string;
+}
+
 export interface ReconSummary {
   open_ports: OpenPortItem[];
   ssl_summary?: SSLSummaryItem;
@@ -146,6 +161,7 @@ export interface ReconSummary {
   sensitive_dirs: SensitiveDirItem[];
   html_leaks: HtmlLeakItem[];
   js_assets?: JsAssetItem[];
+  discovered_parameters?: DiscoveredParamItem[];
 }
 
 export interface AuditReport {
@@ -268,6 +284,8 @@ export function setStoredAuth(token: string, user: UserProfile): void {
   try {
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
+    // Emit custom event untuk notify components on same tab (React Context alternative)
+    window.dispatchEvent(new CustomEvent('auth-change', { detail: { user, token } }));
   } catch (err) {
     console.error('Failed to store auth session', err);
   }
@@ -277,6 +295,7 @@ export function clearStoredAuth(): void {
   try {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    window.dispatchEvent(new CustomEvent('auth-change', { detail: { user: null, token: null } }));
   } catch (err) {
     console.error('Failed to clear auth session', err);
   }
@@ -395,5 +414,76 @@ export async function batchDeleteAudits(sessionIds: string[]): Promise<{ success
   if (!res.ok) {
     throw new Error(`Failed to batch delete audits: ${res.statusText}`);
   }
+  return res.json();
+}
+
+export interface PresetItem {
+  id: string;
+  user_id?: string | null;
+  project_name: string;
+  mode: AuditMode;
+  url?: string;
+  repo?: string;
+  branch?: string;
+  is_demo?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PresetCreatePayload {
+  project_name: string;
+  mode: AuditMode;
+  url?: string;
+  repo?: string;
+  branch?: string;
+  is_demo?: boolean;
+}
+
+export async function fetchPresets(): Promise<PresetItem[]> {
+  try {
+    const res = await fetch(`${API_BASE}/presets`, {
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to fetch presets from API:', err);
+    return [];
+  }
+}
+
+export async function createPreset(payload: PresetCreatePayload): Promise<PresetItem> {
+  const res = await fetch(`${API_BASE}/presets`, {
+    method: 'POST',
+    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: 'Failed to create preset' }));
+    throw new Error(errorData.detail || `HTTP Error ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function deletePresetApi(presetId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/presets/${presetId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) return false;
+    const data = await res.json().catch(() => ({ success: true }));
+    return data.success ?? true;
+  } catch {
+    return false;
+  }
+}
+
+export async function restoreDemoPresetsApi(): Promise<PresetItem[]> {
+  const res = await fetch(`${API_BASE}/presets/restore-demo`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) return [];
   return res.json();
 }

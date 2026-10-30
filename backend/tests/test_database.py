@@ -1,6 +1,9 @@
 import unittest
 from datetime import datetime, timezone
-from backend.database import init_db, save_audit, get_audit, delete_audit, delete_audits_batch, list_audits
+from backend.database import (
+    init_db, save_audit, get_audit, delete_audit, delete_audits_batch, list_audits,
+    save_preset, list_presets, delete_preset, restore_demo_presets,
+)
 
 class TestDatabaseOperations(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
@@ -106,6 +109,40 @@ class TestDatabaseOperations(unittest.IsolatedAsyncioTestCase):
         finally:
             settings.SUPABASE_URL = prev_url
             settings.SUPABASE_KEY = prev_key
+
+    async def test_preset_lifecycle_crud(self):
+        now_str = datetime.now(timezone.utc).isoformat()
+        preset_id = "test-custom-preset-1"
+
+        # 1. Save preset
+        saved = await save_preset(
+            preset_id=preset_id,
+            project_name="Test Staging API",
+            mode="WHITEBOX",
+            url="https://staging.internal",
+            repo="https://github.com/myorg/api",
+            branch="develop",
+            created_at=now_str,
+            updated_at=now_str,
+            user_id="user-xyz-123",
+            is_demo=False,
+        )
+        self.assertEqual(saved["id"], preset_id)
+        self.assertEqual(saved["project_name"], "Test Staging API")
+
+        # 2. List presets for user
+        presets = await list_presets(user_id="user-xyz-123")
+        ids = [p["id"] for p in presets]
+        self.assertIn(preset_id, ids)
+
+        # 3. Delete preset
+        deleted = await delete_preset(preset_id=preset_id, user_id="user-xyz-123")
+        self.assertTrue(deleted)
+
+        # 4. Verify deleted
+        presets_after = await list_presets(user_id="user-xyz-123")
+        ids_after = [p["id"] for p in presets_after]
+        self.assertNotIn(preset_id, ids_after)
 
 if __name__ == "__main__":
     unittest.main()

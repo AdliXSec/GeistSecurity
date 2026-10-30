@@ -17,6 +17,7 @@ import {
   Cpu,
   Code2,
   Bug,
+  Search,
 } from 'lucide-react';
 import { getAuditReport, type AuditReport, type ReconSummary } from '../lib/api';
 
@@ -85,6 +86,40 @@ const DEFAULT_RECON_SUMMARY: ReconSummary = {
       sourcemap_exposed: true,
       sourcemap_url: 'https://demo-fintech.auraglass.io/_next/static/chunks/chunk-auth-9b1c.js.map',
       sub_chunks: [],
+    },
+  ],
+  discovered_parameters: [
+    {
+      name: 'redirect_url',
+      param_type: 'QUERY_STRING',
+      endpoint: '/api/v1/auth/login',
+      risk_category: 'OPEN_REDIRECT_CANDIDATE',
+      severity: 'MEDIUM',
+      description: 'Parameter navigasi tujuan pasca login; berpotensi celah Open Redirect (CWE-601) bila tidak divalidasi dengan whitelist domain origin.',
+    },
+    {
+      name: 'user_id',
+      param_type: 'QUERY_STRING',
+      endpoint: '/api/v1/users/me',
+      risk_category: 'PRIVILEGE_CANDIDATE',
+      severity: 'HIGH',
+      description: 'Identifier akun user diterima via query string GET; berpotensi manipulasi akses IDOR jika otorisasi session tidak diverifikasi di server.',
+    },
+    {
+      name: 'token',
+      param_type: 'QUERY_STRING',
+      endpoint: '/api/v1/auth/session',
+      risk_category: 'SENSITIVE_CREDENTIAL',
+      severity: 'HIGH',
+      description: 'Kredensial atau token otentikasi dikirimkan melalui URL parameter GET; rentan bocor via access log dan HTTP Referer (CWE-598).',
+    },
+    {
+      name: 'q',
+      param_type: 'FORM_QUERY',
+      endpoint: '/search',
+      risk_category: 'STANDARD_INPUT',
+      severity: 'INFO',
+      description: 'Parameter query input standar formulir pencarian internal.',
     },
   ],
 };
@@ -872,7 +907,7 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 min-w-0 overflow-x-clip">
       {/* Top Header: Breadcrumb + Target Info + Action Buttons */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#1e1e22]">
         <div className="space-y-1.5">
@@ -930,43 +965,57 @@ export default function ReportPage() {
       </div>
 
       {/* Status Ribbon: 'Audit Complete' + metadata */}
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-[#71717a] py-2.5 px-4 rounded-xl bg-[#0a0a0a] border border-[#1e1e22]">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981]" />
-          <span className="text-white font-medium">Recon Audit Complete</span>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-3 text-xs font-mono text-[#71717a] py-2.5 px-3.5 sm:px-4 rounded-xl bg-[#0a0a0a] border border-[#1e1e22] min-w-0 w-full overflow-hidden">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 min-w-0">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981] shrink-0" />
+          <span className="text-white font-medium shrink-0">Recon Audit Complete</span>
           <span className="text-[#3f3f46]">·</span>
-          <span>Duration: {(report.duration_ms / 1000).toFixed(1)}s</span>
+          <span className="shrink-0">Duration: {(report.duration_ms / 1000).toFixed(1)}s</span>
           <span className="text-[#3f3f46]">·</span>
-          <span>Target: {report.target_info.target_url || report.target_info.github_repo_url || 'Target Node'}</span>
+          <span className="break-all sm:break-normal">
+            Target: <span className="text-white">{report.target_info.target_url || report.target_info.github_repo_url || 'Target Node'}</span>
+          </span>
           {report.target_info?.scan_depth && (
             <>
               <span className="text-[#3f3f46]">·</span>
-              <span className="text-[#ededed]">Depth: {report.target_info.scan_depth}</span>
+              <span className="text-[#ededed] shrink-0">Depth: {report.target_info.scan_depth}</span>
             </>
           )}
           {report.target_info?.entropy_threshold !== undefined && (
             <>
               <span className="text-[#3f3f46]">·</span>
-              <span className="text-emerald-400">H(X) ≥ {report.target_info.entropy_threshold}</span>
+              <span className="text-emerald-400 shrink-0">H(X) ≥ {report.target_info.entropy_threshold}</span>
             </>
           )}
           {report.target_info?.enable_nuclei && (
             <>
               <span className="text-[#3f3f46]">·</span>
-              <span className="text-cyan-400">Nuclei: {report.target_info.nuclei_profile?.toUpperCase()} ({report.target_info.nuclei_findings_count ?? 0} hits)</span>
+              <span className="text-cyan-400 shrink-0">Nuclei: {report.target_info.nuclei_profile?.toUpperCase()} ({report.target_info.nuclei_findings_count ?? 0} hits)</span>
             </>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 min-w-0 pt-1 md:pt-0 border-t md:border-t-0 border-[#1e1e22]/50 text-[11px] sm:text-xs">
           {report.target_info?.js_exposure !== undefined && (
             <>
-              <span>JS Deobfuscation: <span className={report.target_info.js_exposure ? "text-emerald-400" : "text-[#71717a]"}>{report.target_info.js_exposure ? 'Active' : 'Bypassed'}</span></span>
+              <span className="shrink-0">JS Deobfuscation: <span className={report.target_info.js_exposure ? "text-emerald-400" : "text-[#71717a]"}>{report.target_info.js_exposure ? 'Active' : 'Bypassed'}</span></span>
               <span className="text-[#3f3f46]">·</span>
             </>
           )}
-          <span>Anti-SSRF Verified</span>
+          <span className="shrink-0">Anti-SSRF Verified</span>
           <span className="text-[#3f3f46]">·</span>
-          <span className="text-emerald-400">Zero Leak Redacted</span>
+          <span className="text-emerald-400 shrink-0">Zero Leak Redacted</span>
+          {report.target_info?.auth_headers && Object.keys(report.target_info.auth_headers).length > 0 && (
+            <>
+              <span className="text-[#3f3f46]">·</span>
+              <span className="text-emerald-400 shrink-0">Authenticated Scan Active</span>
+            </>
+          )}
+          {report.target_info?.auth_cookies && Object.keys(report.target_info.auth_cookies).length > 0 && (
+            <>
+              <span className="text-[#3f3f46]">·</span>
+              <span className="text-emerald-400 shrink-0">Session Cookies Injected</span>
+            </>
+          )}
         </div>
       </div>
 
@@ -1603,6 +1652,81 @@ export default function ReportPage() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Parameter Discovery & Risk Telemetry */}
+      {recon.discovered_parameters && recon.discovered_parameters.length > 0 && (
+        <div className="bg-[#0a0a0a] border border-[#1e1e22] rounded-xl p-5 shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#1e1e22]">
+            <div className="flex items-center gap-2">
+              <Search className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-semibold text-white uppercase font-mono tracking-wider">
+                Parameter Attack Surface &amp; Input Vector Mapping
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#111113] border border-[#1e1e22] text-[#a1a1aa]">
+                {recon.discovered_parameters.length} Parameters Identified
+              </span>
+              {recon.discovered_parameters.some((p) => p.severity === 'HIGH' || p.severity === 'CRITICAL') && (
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-red-950/40 border border-red-500/30 text-red-400">
+                  Critical / High Risk Present
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {recon.discovered_parameters.map((param, idx) => {
+              const isSensitive = param.risk_category === 'SENSITIVE_CREDENTIAL';
+              const isRedirect = param.risk_category === 'OPEN_REDIRECT_CANDIDATE';
+              const isPriv = param.risk_category === 'PRIVILEGE_CANDIDATE';
+              const isDebug = param.risk_category === 'DEBUG_FLAG';
+
+              const badgeColor = isSensitive
+                ? 'bg-red-950/40 border-red-500/30 text-red-400'
+                : isRedirect
+                ? 'bg-amber-950/40 border-amber-500/30 text-amber-400'
+                : isPriv
+                ? 'bg-orange-950/40 border-orange-500/30 text-orange-400'
+                : isDebug
+                ? 'bg-blue-950/40 border-blue-500/30 text-blue-400'
+                : 'bg-[#111113] border-[#1e1e22] text-[#71717a]';
+
+              return (
+                <div
+                  key={idx}
+                  className="p-3 bg-[#111113] border border-[#1e1e22] rounded-lg space-y-2 hover:border-[#27272a] transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 truncate">
+                      <span className="text-xs font-mono font-medium text-white px-2 py-0.5 rounded bg-black border border-[#1e1e22]">
+                        {param.name}
+                      </span>
+                      <span className="text-[10px] font-mono text-[#71717a]">
+                        [{param.param_type}]
+                      </span>
+                    </div>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded border uppercase shrink-0 ${badgeColor}`}>
+                      {param.risk_category.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#a1a1aa] truncate">
+                    <span className="text-[#71717a]">Endpoint:</span>
+                    <span className="text-zinc-300 truncate">{param.endpoint}</span>
+                  </div>
+
+                  {param.description && (
+                    <p className="text-[11px] text-[#71717a] leading-relaxed pt-1 border-t border-[#1e1e22]/60">
+                      {param.description}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

@@ -86,6 +86,25 @@ async def _execute_schema(db: aiosqlite.Connection):
             created_at TEXT NOT NULL
         );
     """)
+
+    await db.execute("""
+        CREATE TABLE IF NOT EXISTS presets (
+            id TEXT PRIMARY KEY,
+            user_id TEXT,
+            project_name TEXT NOT NULL,
+            mode TEXT NOT NULL,
+            url TEXT,
+            repo TEXT,
+            branch TEXT DEFAULT 'main',
+            is_demo INTEGER DEFAULT 0,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        );
+    """)
+    try:
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_presets_user_id ON presets (user_id);")
+    except Exception:
+        pass
     await db.commit()
 
     try:
@@ -105,6 +124,24 @@ async def _execute_schema(db: aiosqlite.Connection):
                     "https://demo-fintech.auraglass.io", "https://github.com/auraglass/fintech-core", "main",
                     38, "D", "Grade D (38/100)", 3, 3, 24200,
                     now_iso, now_iso
+                ))
+                await db.commit()
+    except Exception:
+        pass
+
+    try:
+        async with db.execute("SELECT COUNT(*) FROM presets") as cursor:
+            row = await cursor.fetchone()
+            if row and row[0] == 0:
+                now_iso = "2026-10-24T02:15:22Z"
+                await db.execute("""
+                    INSERT INTO presets (
+                        id, user_id, project_name, mode, url, repo, branch, is_demo, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    "demo-fintech", None, "Fintech Payment Gateway (Demo)", "HYBRID",
+                    "https://demo-fintech.auraglass.io", "https://github.com/auraglass/fintech-dashboard-api",
+                    "main", 1, now_iso, now_iso
                 ))
                 await db.commit()
     except Exception:
@@ -145,6 +182,31 @@ async def init_db():
                             headers={**_supabase_headers(), "Prefer": "resolution=merge-duplicates"},
                             json=demo_payload
                         )
+
+                    # Inisialisasi seed default demo preset di Supabase jika kosong
+                    preset_res = await client.get(
+                        _supabase_url("presets?select=id&limit=1"),
+                        headers=_supabase_headers()
+                    )
+                    if preset_res.status_code == 200 and len(preset_res.json()) == 0:
+                        demo_preset_payload = {
+                            "id": "demo-fintech",
+                            "user_id": None,
+                            "project_name": "Fintech Payment Gateway (Demo)",
+                            "mode": "HYBRID",
+                            "url": "https://demo-fintech.auraglass.io",
+                            "repo": "https://github.com/auraglass/fintech-dashboard-api",
+                            "branch": "main",
+                            "is_demo": True,
+                            "created_at": "2026-10-24T02:15:22Z",
+                            "updated_at": "2026-10-24T02:15:22Z"
+                        }
+                        await client.post(
+                            _supabase_url("presets"),
+                            headers={**_supabase_headers(), "Prefer": "resolution=merge-duplicates"},
+                            json=demo_preset_payload
+                        )
+
                     logger.info("[Database] Sukses terhubung ke Supabase Cloud Database.")
                     return
                 elif res.status_code in [404, 400]:
@@ -515,3 +577,183 @@ async def get_user_by_username_or_email(identifier: str) -> Optional[Dict[str, A
         ) as cursor:
             row = await cursor.fetchone()
             return dict(row) if row else None
+
+# ====================================================================
+#  Preset Database Operations (Supabase & SQLite)
+# ====================================================================
+
+async def save_preset(
+    preset_id: str,
+    project_name: str,
+    mode: str,
+    url: Optional[str],
+    repo: Optional[str],
+    branch: str,
+    created_at: str,
+    updated_at: str,
+    user_id: Optional[str] = None,
+    is_demo: bool = False,
+) -> Dict[str, Any]:
+    preset_dict = {
+        "id": preset_id,
+        "user_id": user_id,
+        "project_name": project_name,
+        "mode": mode,
+        "url": url or "",
+        "repo": repo or "",
+        "branch": branch or "main",
+        "is_demo": bool(is_demo),
+        "created_at": created_at,
+        "updated_at": updated_at,
+    }
+
+    if is_supabase_enabled():
+        headers = {
+            **_supabase_headers(),
+            "Prefer": "resolution=merge-duplicates"
+        }
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.post(_supabase_url("presets"), headers=headers, json=preset_dict)
+                if res.status_code not in [200, 201, 204]:
+                    logger.error(f"[Supabase] Gagal menyimpan preset ({res.status_code}): {res.text}")
+        except Exception as e:
+            logger.error(f"[Supabase] Exception saat menyimpan preset: {e}")
+
+    await init_db()
+    async with aiosqlite.connect(settings.DATABASE_PATH) as db:
+        await db.execute(
+            """
+            INSERT INTO presets (
+                id, user_id, project_name, mode, url, repo, branch, is_demo, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                user_id = COALESCE(excluded.user_id, presets.user_id),
+                project_name = excluded.project_name,
+                mode = excluded.mode,
+                url = excluded.url,
+                repo = excluded.repo,
+                branch = excluded.branch,
+                is_demo = excluded.is_demo,
+                updated_at = excluded.updated_at
+            """,
+            (
+                preset_id, user_id, project_name, mode, url or "", repo or "",
+                branch or "main", 1 if is_demo else 0, created_at, updated_at
+            ),
+        )
+        await db.commit()
+    return preset_dict
+
+async def list_presets(user_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    supabase_records: List[Dict[str, Any]] = []
+    if is_supabase_enabled():
+        try:
+            if user_id:
+                query_params = f"or=(user_id.eq.{user_id},user_id.is.null)&order=created_at.asc"
+            else:
+                query_params = "user_id.is.null&order=created_at.asc"
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.get(_supabase_url(f"presets?{query_params}"), headers=_supabase_headers())
+                if res.status_code == 200:
+                    data = res.json()
+                    if isinstance(data, list):
+                        supabase_records = data
+        except Exception as e:
+            logger.error(f"[Supabase] Error saat list_presets: {e}")
+
+    await init_db()
+    local_records: List[Dict[str, Any]] = []
+    try:
+        async with aiosqlite.connect(settings.DATABASE_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            if user_id:
+                query = "SELECT * FROM presets WHERE user_id = ? OR user_id IS NULL ORDER BY created_at ASC"
+                params = (user_id,)
+            else:
+                query = "SELECT * FROM presets WHERE user_id IS NULL ORDER BY created_at ASC"
+                params = ()
+            async with db.execute(query, params) as cursor:
+                rows = await cursor.fetchall()
+                for r in rows:
+                    rec = dict(r)
+                    rec["is_demo"] = bool(rec.get("is_demo", 0))
+                    local_records.append(rec)
+    except Exception as e:
+        logger.error(f"[SQLite] Error saat list_presets: {e}")
+
+    seen_ids = set()
+    merged: List[Dict[str, Any]] = []
+    for rec in supabase_records:
+        pid = rec.get("id")
+        if pid and pid not in seen_ids:
+            seen_ids.add(pid)
+            rec["is_demo"] = bool(rec.get("is_demo", False))
+            merged.append(rec)
+    for rec in local_records:
+        pid = rec.get("id")
+        if pid and pid not in seen_ids:
+            seen_ids.add(pid)
+            merged.append(rec)
+
+    if not merged:
+        demo_preset = {
+            "id": "demo-fintech",
+            "user_id": None,
+            "project_name": "Fintech Payment Gateway (Demo)",
+            "mode": "HYBRID",
+            "url": "https://demo-fintech.auraglass.io",
+            "repo": "https://github.com/auraglass/fintech-dashboard-api",
+            "branch": "main",
+            "is_demo": True,
+            "created_at": "2026-10-24T02:15:22Z",
+            "updated_at": "2026-10-24T02:15:22Z",
+        }
+        merged.append(demo_preset)
+
+    return merged
+
+async def delete_preset(preset_id: str, user_id: Optional[str] = None) -> bool:
+    if is_supabase_enabled():
+        try:
+            headers = {**_supabase_headers(), "Prefer": "return=representation"}
+            query_params = f"id=eq.{preset_id}"
+            if user_id:
+                query_params += f"&or=(user_id.eq.{user_id},user_id.is.null)"
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.delete(_supabase_url(f"presets?{query_params}"), headers=headers)
+                if res.status_code == 200:
+                    deleted = res.json()
+                    return len(deleted) > 0
+        except Exception as e:
+            logger.error(f"[Supabase] Error saat delete_preset: {e}")
+
+    await init_db()
+    async with aiosqlite.connect(settings.DATABASE_PATH) as db:
+        if user_id:
+            cursor = await db.execute("DELETE FROM presets WHERE id = ? AND (user_id = ? OR user_id IS NULL)", (preset_id, user_id))
+        else:
+            cursor = await db.execute("DELETE FROM presets WHERE id = ?", (preset_id,))
+        await db.commit()
+        return cursor.rowcount > 0
+
+async def restore_demo_presets(user_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    if is_supabase_enabled():
+        try:
+            query_params = "is_demo=eq.false"
+            if user_id:
+                query_params += f"&user_id=eq.{user_id}"
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                await client.delete(_supabase_url(f"presets?{query_params}"), headers=_supabase_headers())
+        except Exception as e:
+            logger.error(f"[Supabase] Error restore_demo_presets: {e}")
+
+    await init_db()
+    async with aiosqlite.connect(settings.DATABASE_PATH) as db:
+        if user_id:
+            await db.execute("DELETE FROM presets WHERE is_demo = 0 AND user_id = ?", (user_id,))
+        else:
+            await db.execute("DELETE FROM presets WHERE is_demo = 0")
+        await db.commit()
+
+    return await list_presets(user_id)

@@ -82,6 +82,8 @@ async def run_audit_pipeline(
     enable_nuclei: bool = True,
     nuclei_profile: str = "quick",
     user_id: Optional[str] = None,
+    auth_headers: Optional[Dict[str, str]] = None,
+    auth_cookies: Optional[Dict[str, str]] = None,
 ):
     start_time = time.time()
     created_at = datetime.now(timezone.utc).isoformat()
@@ -228,7 +230,9 @@ async def run_audit_pipeline(
                     js_exposure=js_exposure,
                     enable_nuclei=enable_nuclei,
                     nuclei_profile=nuclei_profile,
-                    progress_callback=bb_nuclei_cb
+                    progress_callback=bb_nuclei_cb,
+                    auth_headers=auth_headers,
+                    auth_cookies=auth_cookies,
                 )
                 detected_tech_stack.extend(tech_stack)
                 all_findings.extend(blackbox_findings)
@@ -320,7 +324,9 @@ async def run_audit_pipeline(
                     js_exposure=js_exposure,
                     enable_nuclei=enable_nuclei,
                     nuclei_profile=nuclei_profile,
-                    progress_callback=hyb_nuclei_cb
+                    progress_callback=hyb_nuclei_cb,
+                    auth_headers=auth_headers,
+                    auth_cookies=auth_cookies,
                 )
                 detected_tech_stack.extend(tech_stack)
                 all_findings.extend(blackbox_findings)
@@ -400,6 +406,8 @@ async def run_audit_pipeline(
                 "entropy_threshold": entropy_threshold,
                 "scan_depth": scan_depth,
                 "js_exposure": js_exposure,
+                "auth_headers": {k: "[REDACTED]" for k in (auth_headers or {})} if auth_headers else None,
+                "auth_cookies": {k: "[REDACTED]" for k in (auth_cookies or {})} if auth_cookies else None,
                 "enable_nuclei": enable_nuclei,
                 "nuclei_profile": nuclei_profile,
                 "nuclei_findings_count": recon_summary.get("nuclei_findings_count", 0) if recon_summary else 0

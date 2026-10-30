@@ -28,16 +28,20 @@ export const Navbar: React.FC = () => {
       prevPathRef.current = location.pathname;
       setMobileMenuOpen(false);
       setShowDropdown(false);
+      // Safety net: re-read auth on every route change
+      setCurrentUser(getStoredUser());
     }
   }, [location.pathname]);
 
-  // Sync user state on window storage events
+  // Sync user state: 'auth-change' = same tab (login/logout/register), 'storage' = other tabs
   useEffect(() => {
-    const handleStorage = () => {
-      setCurrentUser(getStoredUser());
+    const syncUser = () => setCurrentUser(getStoredUser());
+    window.addEventListener("auth-change", syncUser);
+    window.addEventListener("storage", syncUser);
+    return () => {
+      window.removeEventListener("auth-change", syncUser);
+      window.removeEventListener("storage", syncUser);
     };
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   // Close dropdown on click outside

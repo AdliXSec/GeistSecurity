@@ -2,7 +2,7 @@ import uuid
 import json
 import asyncio
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Dict, List, Optional
 from fastapi import APIRouter, HTTPException, BackgroundTasks, status, Depends
 from fastapi.responses import JSONResponse
 from sse_starlette.sse import EventSourceResponse
@@ -72,7 +72,34 @@ async def create_audit(
         user_id=user_id,
     )
 
-    # 3. Queue background execution
+    # 3. Normalize Authenticated Scan Headers & Cookies
+    auth_headers: Dict[str, str] = {}
+    if request.auth_headers:
+        for k, v in request.auth_headers.items():
+            if k and v:
+                auth_headers[str(k).strip()] = str(v).strip()
+
+    if request.auth_token:
+        tok = request.auth_token.strip()
+        if not any(k.lower() == "authorization" for k in auth_headers):
+            auth_val = tok if tok.lower().startswith("bearer ") else f"Bearer {tok}"
+            auth_headers["Authorization"] = auth_val
+
+    auth_cookies: Dict[str, str] = {}
+    if request.auth_cookies:
+        for k, v in request.auth_cookies.items():
+            if k and v:
+                auth_cookies[str(k).strip()] = str(v).strip()
+
+    if request.auth_cookie_string:
+        for part in request.auth_cookie_string.split(";"):
+            part = part.strip()
+            if "=" in part:
+                ckey, cval = part.split("=", 1)
+                if ckey.strip():
+                    auth_cookies[ckey.strip()] = cval.strip()
+
+    # 4. Queue background execution
     asyncio.create_task(
         run_audit_pipeline(
             session_id=session_id,
@@ -87,6 +114,8 @@ async def create_audit(
             enable_nuclei=request.enable_nuclei if request.enable_nuclei is not None else True,
             nuclei_profile=request.nuclei_profile or "quick",
             user_id=user_id,
+            auth_headers=auth_headers or None,
+            auth_cookies=auth_cookies or None,
         )
     )
 
@@ -805,10 +834,11 @@ async def get_audit_status(session_id: str, user: Optional[dict] = Depends(get_c
 )
 async def get_audits_list(user: Optional[dict] = Depends(get_current_user_optional)):
     """
-    Mengambil riwayat sesi audit untuk Dashboard. Mengembalikan sesi milik operator aktif, atau seluruh sesi lokal jika mode single-user/local.
+    Mengambil riwayat sesi audit untuk Dashboard. Hanya mengembalikan sesi milik operator yang sedang aktif.
     """
-    user_id = user["id"] if user else None
-    audits = await list_audits(user_id=user_id, limit=50)
+    if not user:
+        return []
+    audits = await list_audits(user_id=user["id"], limit=50)
     return audits
 
 @router.delete(

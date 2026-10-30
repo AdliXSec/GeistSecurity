@@ -203,6 +203,71 @@ DEFAULT_REMEDIATIONS: Dict[str, Dict[str, Any]] = {
             "original_code": "# Committed .env file",
             "patched_code": "# Add to .gitignore\necho '.env' >> .gitignore\ngit rm --cached .env"
         }
+    },
+    "PARAM-SENSITIVE-DATA-IN-GET": {
+        "risk_explanation": "Kredensial atau token rahasia dikirimkan melalui URL query parameter GET. URL query string dicatat dalam server access logs, browser history, dan diteruskan via header HTTP Referer ke pihak ketiga (CWE-598).",
+        "remediation_steps": [
+            "Pindahkan transmisi token dari query string ke header HTTP 'Authorization: Bearer <token>'.",
+            "Untuk form submission, gunakan metode HTTP POST/PUT dengan payload request body terenkripsi TLS.",
+            "Konfigurasikan header Referrer-Policy: no-referrer atau strict-origin-when-cross-origin."
+        ],
+        "code_patch": {
+            "language": "typescript",
+            "original_code": "// Transmisi token via query string rentan tercatat di log\nconst res = await fetch(`/api/user?token=${authToken}`);",
+            "patched_code": "// Transmisi aman via HTTP Authorization header\nconst res = await fetch('/api/user', {\n  headers: {\n    'Authorization': `Bearer ${authToken}`\n  }\n});"
+        }
+    },
+    "PARAM-POTENTIAL-OPEN-REDIRECT": {
+        "risk_explanation": "Parameter redirect/tujuan navigasi menerima URL eksternal tanpa validasi ketat, memungkinkan penyerang menyisipkan tautan berbahaya untuk aksi phishing atas nama domain resmi (CWE-601).",
+        "remediation_steps": [
+            "Terapkan validasi whitelist domain resmi yang diizinkan untuk parameter redirect.",
+            "Gunakan relative path internal (pastikan diawali '/' tunggal dan bukan '//' atau 'http').",
+            "Gunakan identifier rute internal (contoh: return_code=dashboard) alih-alih raw URL."
+        ],
+        "code_patch": {
+            "language": "typescript",
+            "original_code": "const redirectUrl = req.query.redirect_url as string;\nres.redirect(redirectUrl);",
+            "patched_code": "const redirectUrl = req.query.redirect_url as string;\nconst ALLOWED_HOSTS = ['auraglass.test', 'dashboard.auraglass.test'];\ntry {\n  const parsed = new URL(redirectUrl, 'https://auraglass.test');\n  if (ALLOWED_HOSTS.includes(parsed.hostname)) {\n    res.redirect(parsed.toString());\n  } else {\n    res.redirect('/dashboard');\n  }\n} catch {\n  res.redirect('/dashboard');\n}"
+        }
+    },
+    "PARAM-PRIVILEGE-OR-IDOR-CANDIDATE": {
+        "risk_explanation": "Parameter penentu hak akses (role/admin) atau identifier objek (user_id/account_id) diterima dari klien tanpa verifikasi otorisasi di sisi server, berpotensi manipulasi hak akses atau IDOR (CWE-639).",
+        "remediation_steps": [
+            "Ambil identitas dan hak akses pengguna secara eksklusif dari context session token server yang terverifikasi.",
+            "Validasi kepemilikan resource (tenant scoping) sebelum memproses query database.",
+            "Gunakan UUID non-sekuensial atau enkripsi identifier publik."
+        ],
+        "code_patch": {
+            "language": "python",
+            "original_code": "# Menggunakan ID dari input user tanpa verifikasi kepemilikan\n@app.get('/api/orders')\ndef get_orders(user_id: int):\n    return db.query(Order).filter(Order.user_id == user_id).all()",
+            "patched_code": "# Mengambil user_id langsung dari context session login terotentikasi\n@app.get('/api/orders')\ndef get_orders(current_user: User = Depends(get_current_user)):\n    return db.query(Order).filter(Order.user_id == current_user.id).all()"
+        }
+    },
+    "PARAM-DEBUG-MODE-EXPOSURE": {
+        "risk_explanation": "Parameter debug/internal testing aktif di lingkungan publik. Parameter ini dapat memicu pengungkapan traceback kesalahan internal atau bypass autentikasi (CWE-215).",
+        "remediation_steps": [
+            "Nonaktifkan dan hapus parameter evaluasi debug dari routing production.",
+            "Pastikan environment variable APP_DEBUG atau NODE_ENV bernilai 'production'.",
+            "Isolasi endpoint diagnostik hanya pada jaringan lokal atau staging dengan autentikasi mTLS."
+        ],
+        "code_patch": {
+            "language": "python",
+            "original_code": "debug_mode = request.query_params.get('debug') == 'true'\nif debug_mode:\n    show_full_system_traceback()",
+            "patched_code": "# Abaikan query parameter klien; hanya baca flag server environment\nif settings.ENVIRONMENT == 'development' and settings.APP_DEBUG:\n    show_full_system_traceback()"
+        }
+    },
+    "PARAM-UNENCODED-INPUT-REFLECTION": {
+        "risk_explanation": "Parameter input dari URL direfleksikan langsung ke dalam body dokumen HTML respons tanpa contextual output encoding, membuka peluang celah Reflected Cross-Site Scripting (CWE-79).",
+        "remediation_steps": [
+            "Terapkan context-aware output encoding (HTML entity encoding) pada setiap parameter yang direfleksikan.",
+            "Gunakan Content-Security-Policy (CSP) yang membatasi eksekusi skrip inline.",
+            "Gunakan templating engine yang melakukan auto-escaping secara default."
+        ],
+        "code_patch": {
+            "language": "python",
+            "original_code": "return f\"<h1>Pencarian untuk: {query}</h1>\"",
+            "patched_code": "import html\nsafe_query = html.escape(query)\nreturn f\"<h1>Pencarian untuk: {safe_query}</h1>\""
+        }
     }
 }
 

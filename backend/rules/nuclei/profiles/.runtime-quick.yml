@@ -11,3 +11,4 @@ templates:
 - /home/leexy/testsprite/secaudit/backend/rules/nuclei/02-misconfigurations/headers-and-cors
 - /home/leexy/testsprite/secaudit/backend/rules/nuclei/02-misconfigurations/debug-and-info-leaks
 - /home/leexy/testsprite/secaudit/backend/rules/nuclei/03-often-overlooked/takeovers
+- /home/leexy/testsprite/secaudit/backend/rules/nuclei/05-core-dast/sqli-and-xss

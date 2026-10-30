@@ -24,7 +24,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from backend.config import settings
 from backend.database import init_db
-from backend.routers import audits, auth
+from backend.routers import audits, auth, presets
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -81,6 +81,8 @@ async def normalize_double_api_middleware(request: Request, call_next):
 # Include Routers
 app.include_router(audits.router)
 app.include_router(auth.router)
+app.include_router(presets.router)
+app.include_router(presets.legacy_router)
 
 @app.get("/api", tags=["API Root"])
 @app.get("/api/", tags=["API Root"])

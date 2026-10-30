@@ -5,7 +5,7 @@ import re
 import uuid
 import time
 from datetime import datetime, timezone
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse, urljoin, parse_qs, urlsplit
 from typing import List, Dict, Any, Tuple, Optional
 
 import httpx
@@ -1434,17 +1434,328 @@ def scan_misconfigurations(
 
     return findings
 
+# Modul 8: Parameter Discovery & Security Analyzer
+async def scan_url_and_form_parameters(
+    target_url: str,
+    headers: Dict[str, str],
+    html_text: str,
+    soup: BeautifulSoup,
+    client: Optional[httpx.AsyncClient] = None
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """
+    Modul 8: Menemukan parameter input dari URL query strings, formulir HTML (<form>), link anchor, dan JavaScript,
+    serta menganalisis potensi celah keamanan (CWE-598 sensitive data in GET, CWE-601 open redirect,
+    CWE-639 IDOR/privilege tampering, CWE-215 debug flags, dan CWE-79 unencoded reflection) secara aman dan terukur.
+    """
+    discovered_params: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
+    findings: List[Dict[str, Any]] = []
+
+    parsed_target = urlparse(target_url)
+    default_endpoint = parsed_target.path or "/"
+
+    # 1. Parameter dari Query String URL Target
+    if parsed_target.query:
+        target_qs = parse_qs(parsed_target.query)
+        for param_name in target_qs.keys():
+            if not param_name or not param_name.strip():
+                continue
+            p_clean = param_name.strip()
+            key = (p_clean.lower(), "QUERY_STRING", default_endpoint)
+            discovered_params[key] = {
+                "name": p_clean,
+                "param_type": "QUERY_STRING",
+                "endpoint": default_endpoint,
+                "risk_category": "STANDARD_INPUT",
+                "severity": "INFO",
+                "description": f"Parameter URL query terdeteksi pada target ({p_clean})."
+            }
+
+    # 2. Parameter dari Formulir HTML (<form>)
+    for form in soup.find_all("form"):
+        raw_action = form.get("action") or target_url
+        form_endpoint = urlparse(urljoin(target_url, raw_action)).path or "/"
+        method = (form.get("method") or "GET").upper()
+        form_param_type = "FORM_QUERY" if method == "GET" else "FORM_BODY"
+
+        for input_tag in form.find_all(["input", "textarea", "select"]):
+            p_name = input_tag.get("name")
+            if not p_name or not p_name.strip():
+                continue
+            p_name = p_name.strip()
+            key = (p_name.lower(), form_param_type, form_endpoint)
+            if key not in discovered_params:
+                discovered_params[key] = {
+                    "name": p_name,
+                    "param_type": form_param_type,
+                    "endpoint": form_endpoint,
+                    "risk_category": "STANDARD_INPUT",
+                    "severity": "INFO",
+                    "description": f"Input field formulir ({method}) pada endpoint {form_endpoint}."
+                }
+
+    # 3. Parameter dari Anchor Links & Script Tags yang membawa query strings
+    for tag in soup.find_all(["a", "script", "link"]):
+        attr_val = tag.get("href") or tag.get("src")
+        if not attr_val or "?" not in attr_val or attr_val.startswith(("#", "javascript:", "mailto:", "data:")):
+            continue
+        try:
+            full_link = urljoin(target_url, attr_val)
+            parsed_link = urlparse(full_link)
+            if parsed_link.netloc and parsed_link.netloc != parsed_target.netloc:
+                continue
+            link_qs = parse_qs(parsed_link.query)
+            link_endpoint = parsed_link.path or "/"
+            for p_name in link_qs.keys():
+                if not p_name or not p_name.strip():
+                    continue
+                p_clean = p_name.strip()
+                # Skip asset cache-busters like ?v=1.2 or ?t=169000
+                if p_clean.lower() in ("v", "version", "_v", "ver", "t", "ts", "_t"):
+                    continue
+                key = (p_clean.lower(), "QUERY_STRING", link_endpoint)
+                if key not in discovered_params:
+                    discovered_params[key] = {
+                        "name": p_clean,
+                        "param_type": "QUERY_STRING",
+                        "endpoint": link_endpoint,
+                        "risk_category": "STANDARD_INPUT",
+                        "severity": "INFO",
+                        "description": f"Parameter URL query terdeteksi pada tautan internal {link_endpoint}."
+                    }
+        except Exception:
+            pass
+
+    # 4. Parameter dari JavaScript (URLSearchParams & dynamic query patterns)
+    if html_text:
+        # Regex URLSearchParams: searchParams.get('...') / has('...')
+        js_search_params = re.findall(r'searchParams\.(?:get|has|set)\([\'"]([a-zA-Z0-9_\-]+)[\'"]\)', html_text)
+        for p_name in set(js_search_params):
+            if p_name and p_name.strip():
+                p_clean = p_name.strip()
+                key = (p_clean.lower(), "JS_SEARCHPARAMS", default_endpoint)
+                if key not in discovered_params:
+                    discovered_params[key] = {
+                        "name": p_clean,
+                        "param_type": "JS_SEARCHPARAMS",
+                        "endpoint": default_endpoint,
+                        "risk_category": "STANDARD_INPUT",
+                        "severity": "INFO",
+                        "description": f"Parameter URLSearchParams diakses secara dinamis via JavaScript sisi klien ({p_clean})."
+                    }
+
+    # 5. Klasifikasi Risiko Keamanan & Pemetaan Celah (Passive Analysis)
+    sensitive_pattern = re.compile(
+        r'^(token|access_token|api_?key|secret|password|passwd|auth|jwt|session_?id|private_?key|refresh_?token|client_?secret)$',
+        re.IGNORECASE
+    )
+    redirect_pattern = re.compile(
+        r'^(redirect|redirect_?url|redirect_?to|return_?to|return_?url|next|url|dest|destination|continue|target_?url|goto|callback)$',
+        re.IGNORECASE
+    )
+    privilege_pattern = re.compile(
+        r'^(role|is_?admin|admin|privilege|group_?id|tenant_?id|account_?id|user_?id)$',
+        re.IGNORECASE
+    )
+    debug_pattern = re.compile(
+        r'^(debug|test|dev|dry_?run|bypass|internal|enable_?debug|profiler)$',
+        re.IGNORECASE
+    )
+
+    reported_finding_keys = set()
+
+    for (p_lower, p_type, endpoint), p_info in discovered_params.items():
+        p_name = p_info["name"]
+
+        # A. Cek Sensitive Credential pada GET (CWE-598 / OWASP A02:2021)
+        if sensitive_pattern.search(p_lower) or any(s in p_lower for s in ("password", "secret", "api_key", "access_token")):
+            if p_type in ("QUERY_STRING", "FORM_QUERY", "JS_SEARCHPARAMS"):
+                p_info["risk_category"] = "SENSITIVE_CREDENTIAL"
+                p_info["severity"] = "HIGH"
+                p_info["description"] = (
+                    f"Parameter sensitif '{p_name}' ditransmisikan via URL query string. "
+                    "Rentan bocor ke web server access logs, browser history, proxy caches, dan HTTP Referer headers (CWE-598)."
+                )
+                f_key = f"sensitive-{p_lower}"
+                if f_key not in reported_finding_keys:
+                    reported_finding_keys.add(f_key)
+                    findings.append({
+                        "id": f"bb-param-sensitive-{p_lower}",
+                        "rule_id": "PARAM-SENSITIVE-DATA-IN-GET",
+                        "category": "INFORMATION_EXPOSURE",
+                        "severity": "HIGH",
+                        "title": f"Sensitive Credential Parameter '{p_name}' Ditransmisikan via URL Query String",
+                        "cwe_id": "CWE-598",
+                        "owasp_category": "A02:2021-Cryptographic Failures",
+                        "cvss_score": 7.5,
+                        "location": {
+                            "source_origin": "PARAMETER_SCANNER",
+                            "path": endpoint,
+                            "line_start": 1,
+                            "line_end": 1
+                        },
+                        "redacted_code_snippet": f"GET {endpoint}?{p_name}=[REDACTED_SECRET]",
+                        "evidence_metadata": {
+                            "parameter": p_name,
+                            "param_type": p_type,
+                            "endpoint": endpoint,
+                            "exposure": "URL_QUERY_STRING"
+                        }
+                    })
+
+        # B. Cek Open Redirect Candidate (CWE-601 / OWASP A01:2021)
+        elif redirect_pattern.search(p_lower):
+            p_info["risk_category"] = "OPEN_REDIRECT_CANDIDATE"
+            p_info["severity"] = "MEDIUM"
+            p_info["description"] = (
+                f"Parameter '{p_name}' mengontrol alur pengalihan (redirect) navigasi. "
+                "Berpotensi membuka celah Open Redirect jika nilai input tidak dibatasi whitelist domain resmi."
+            )
+            f_key = f"redirect-{p_lower}"
+            if f_key not in reported_finding_keys:
+                reported_finding_keys.add(f_key)
+                findings.append({
+                    "id": f"bb-param-redirect-{p_lower}",
+                    "rule_id": "PARAM-POTENTIAL-OPEN-REDIRECT",
+                    "category": "INSECURE_CONFIGURATION",
+                    "severity": "MEDIUM",
+                    "title": f"Parameter Redirection '{p_name}' Berpotensi Celah Open Redirect",
+                    "cwe_id": "CWE-601",
+                    "owasp_category": "A01:2021-Broken Access Control",
+                    "cvss_score": 6.1,
+                    "location": {
+                        "source_origin": "PARAMETER_SCANNER",
+                        "path": endpoint,
+                        "line_start": 1,
+                        "line_end": 1
+                    },
+                    "redacted_code_snippet": f"GET {endpoint}?{p_name}=[TARGET_DESTINATION_URL]",
+                    "evidence_metadata": {
+                        "parameter": p_name,
+                        "param_type": p_type,
+                        "endpoint": endpoint,
+                        "risk_type": "OPEN_REDIRECT"
+                    }
+                })
+
+        # C. Cek Privilege Tampering / BOLA-IDOR Candidate (CWE-639 / OWASP A01:2021)
+        elif privilege_pattern.search(p_lower):
+            is_priv = p_lower in ("role", "is_admin", "admin", "privilege")
+            p_info["risk_category"] = "PRIVILEGE_CANDIDATE"
+            p_info["severity"] = "HIGH" if is_priv else "MEDIUM"
+            p_info["description"] = (
+                f"Parameter otorisasi atau object reference '{p_name}' diterima dari sisi klien. "
+                "Wajib divalidasi dan diotorisasi berdasarkan session pengguna di sisi server untuk mencegah manipulasi hak akses atau IDOR."
+            )
+            f_key = f"priv-{p_lower}"
+            if f_key not in reported_finding_keys:
+                reported_finding_keys.add(f_key)
+                findings.append({
+                    "id": f"bb-param-priv-{p_lower}",
+                    "rule_id": "PARAM-PRIVILEGE-OR-IDOR-CANDIDATE",
+                    "category": "INSECURE_DESIGN",
+                    "severity": "HIGH" if is_priv else "MEDIUM",
+                    "title": f"Parameter Otorisasi / IDOR Candidate '{p_name}' Dikirimkan dari Klien",
+                    "cwe_id": "CWE-639",
+                    "owasp_category": "A01:2021-Broken Access Control",
+                    "cvss_score": 6.8 if is_priv else 5.5,
+                    "location": {
+                        "source_origin": "PARAMETER_SCANNER",
+                        "path": endpoint,
+                        "line_start": 1,
+                        "line_end": 1
+                    },
+                    "redacted_code_snippet": f"{endpoint}?{p_name}=[CLIENT_SUPPLIED_VALUE]",
+                    "evidence_metadata": {
+                        "parameter": p_name,
+                        "param_type": p_type,
+                        "endpoint": endpoint,
+                        "risk_type": "PRIVILEGE_TAMPERING_OR_IDOR"
+                    }
+                })
+
+        # D. Cek Debug & Testing Bypass Parameter (CWE-215 / OWASP A05:2021)
+        elif debug_pattern.search(p_lower):
+            p_info["risk_category"] = "DEBUG_FLAG"
+            p_info["severity"] = "MEDIUM"
+            p_info["description"] = (
+                f"Parameter debug/testing '{p_name}' terdeteksi pada antarmuka publik. "
+                "Parameter diagnostik dapat memicu informasi verbose, profiling, atau bypass pemeriksaan keamanan jika aktif di production."
+            )
+            f_key = f"debug-{p_lower}"
+            if f_key not in reported_finding_keys:
+                reported_finding_keys.add(f_key)
+                findings.append({
+                    "id": f"bb-param-debug-{p_lower}",
+                    "rule_id": "PARAM-DEBUG-MODE-EXPOSURE",
+                    "category": "MISCONFIG_DEFAULT",
+                    "severity": "MEDIUM",
+                    "title": f"Parameter Debug Mode '{p_name}' Terpapar pada Lingkungan Publik",
+                    "cwe_id": "CWE-215",
+                    "owasp_category": "A05:2021-Security Misconfiguration",
+                    "cvss_score": 5.3,
+                    "location": {
+                        "source_origin": "PARAMETER_SCANNER",
+                        "path": endpoint,
+                        "line_start": 1,
+                        "line_end": 1
+                    },
+                    "redacted_code_snippet": f"{endpoint}?{p_name}=1",
+                    "evidence_metadata": {
+                        "parameter": p_name,
+                        "param_type": p_type,
+                        "endpoint": endpoint
+                    }
+                })
+
+    # 6. Pengujian Refleksi Parameter Non-Destruktif (Safe Benign Reflection Test)
+    if client and target_url.startswith(("http://", "https://")):
+        try:
+            probe_key = "aurasec_test_p"
+            probe_marker = "probe_marker_9021"
+            delim = "&" if "?" in target_url else "?"
+            probe_url = f"{target_url}{delim}{probe_key}={probe_marker}"
+            probe_resp = await client.get(probe_url, timeout=3.0)
+            if probe_resp.status_code == 200 and probe_marker in probe_resp.text:
+                findings.append({
+                    "id": "bb-param-unencoded-reflection",
+                    "rule_id": "PARAM-UNENCODED-INPUT-REFLECTION",
+                    "category": "INJECTION_RISK",
+                    "severity": "MEDIUM",
+                    "title": "Parameter Input URL Direfleksikan ke Body HTML Tanpa Contextual Output Encoding",
+                    "cwe_id": "CWE-79",
+                    "owasp_category": "A03:2021-Injection",
+                    "cvss_score": 6.1,
+                    "location": {
+                        "source_origin": "PARAMETER_SCANNER",
+                        "path": target_url,
+                        "line_start": 1,
+                        "line_end": 1
+                    },
+                    "redacted_code_snippet": f"GET {target_url}?{probe_key}=[SAFE_PROBE] -> Direfleksikan langsung ke dokumen HTML",
+                    "evidence_metadata": {
+                        "probe_param": probe_key,
+                        "reflection_target": target_url,
+                        "safe_probe": True
+                    }
+                })
+        except Exception:
+            pass
+
+    return list(discovered_params.values()), findings
+
 # Master Reconnaissance Runner
 async def run_comprehensive_recon(
     target_url: str,
     entropy_threshold: float = 4.2,
     scan_depth: str = "Deep",
-    js_exposure: bool = True
+    js_exposure: bool = True,
+    auth_headers: Optional[Dict[str, str]] = None,
+    auth_cookies: Optional[Dict[str, str]] = None,
 ) -> Dict[str, Any]:
     """
-    Eksekutor Master untuk 7 Modul Information Gathering & Attack Surface Reconnaissance.
+    Eksekutor Master untuk 8 Modul Information Gathering & Attack Surface Reconnaissance.
     Selesai dalam < 15 detik menggunakan eksekusi paralel asinkron.
-    Mendukung konfigurasi dinamis Shannon Entropy, Scan Depth, dan JS Deobfuscation.
+    Mendukung konfigurasi dinamis Shannon Entropy, Scan Depth, JS Deobfuscation, serta Authenticated Scanning (Headers & Cookies).
     """
     parsed = urlparse(target_url)
     host = parsed.hostname or "localhost"
@@ -1457,6 +1768,7 @@ async def run_comprehensive_recon(
     sensitive_dirs: List[Dict[str, Any]] = []
     html_leaks: List[Dict[str, Any]] = []
     js_assets: List[Dict[str, Any]] = []
+    discovered_parameters: List[Dict[str, Any]] = []
 
     # 1. Parallel Network Probing: Port Scan & SSL Analyzer
     port_task = scan_open_ports(host, target_port=parsed.port, scan_depth=scan_depth)
@@ -1489,8 +1801,21 @@ async def run_comprehensive_recon(
         "Upgrade-Insecure-Requests": "1"
     }
 
+    # Inject custom auth headers (overrides browser defaults for specified keys)
+    if auth_headers:
+        for k, v in auth_headers.items():
+            browser_headers[k] = v
+
+    # Build httpx cookie jar from auth_cookies dict
+    auth_cookie_jar = None
+    if auth_cookies:
+        import httpx as _httpx
+        auth_cookie_jar = _httpx.Cookies()
+        for k, v in auth_cookies.items():
+            auth_cookie_jar.set(k, v)
+
     try:
-        async with httpx.AsyncClient(timeout=6.0, follow_redirects=True, verify=False, headers=browser_headers) as client:
+        async with httpx.AsyncClient(timeout=6.0, follow_redirects=True, verify=False, headers=browser_headers, cookies=auth_cookie_jar) as client:
             resp = await client.get(target_url)
             headers = {k.lower(): v for k, v in resp.headers.items()}
             html_text = resp.text
@@ -1562,6 +1887,13 @@ async def run_comprehensive_recon(
                 misconfig_findings = scan_misconfigurations(target_url, headers, cookies, html_text)
                 all_findings.extend(misconfig_findings)
 
+            # 8. Modul 8: Parameter Discovery & Security Analyzer
+            param_items, param_findings = await scan_url_and_form_parameters(
+                target_url, headers, html_text, soup, client=client
+            )
+            discovered_parameters.extend(param_items)
+            all_findings.extend(param_findings)
+
     except Exception:
         # Fallback untuk Demo Sandbox atau mock network
         soup = BeautifulSoup("<html><!-- TODO: hapus staging API key sebelum deploy --></html>", "html.parser")
@@ -1596,6 +1928,13 @@ async def run_comprehensive_recon(
             misconfig_findings = scan_misconfigurations(target_url, headers, cookies, html_text)
             all_findings.extend(misconfig_findings)
 
+        # Fallback Parameter Discovery
+        param_items, param_findings = await scan_url_and_form_parameters(
+            target_url, headers, html_text, soup, client=None
+        )
+        discovered_parameters.extend(param_items)
+        all_findings.extend(param_findings)
+
     return {
         "open_ports": open_ports,
         "ssl_summary": ssl_summary,
@@ -1603,5 +1942,6 @@ async def run_comprehensive_recon(
         "sensitive_dirs": sensitive_dirs,
         "html_leaks": html_leaks,
         "js_assets": js_assets,
+        "discovered_parameters": discovered_parameters,
         "findings": all_findings
     }

@@ -268,18 +268,21 @@ export const HomePage: React.FC = () => {
         <section className="max-w-3xl mx-auto">
           <div className="relative rounded-xl bg-[#0a0a0a] border border-[#1e1e22] shadow-2xl p-4 sm:p-6 md:p-8">
             {/* Terminal header bar */}
-            <div className="h-9 bg-[#111113]/80 border-b border-[#1e1e22] -mx-4 sm:-mx-6 md:-mx-8 -mt-4 sm:-mt-6 md:-mt-8 mb-6 px-4 flex items-center justify-between rounded-t-xl">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#27272a]" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#27272a]" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#27272a]" />
-                <span className="font-mono text-[11px] sm:text-xs text-[#a1a1aa] ml-2 sm:ml-3 flex items-center gap-1.5 truncate max-w-[190px] sm:max-w-none">
+            <div className="h-9 bg-[#111113]/80 border-b border-[#1e1e22] -mx-4 sm:-mx-6 md:-mx-8 -mt-4 sm:-mt-6 md:-mt-8 mb-6 px-3 sm:px-4 flex items-center justify-between rounded-t-xl gap-2 min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#27272a]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#27272a]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#27272a]" />
+                </div>
+                <span className="font-mono text-[10px] sm:text-xs text-[#a1a1aa] ml-1.5 sm:ml-3 flex items-center gap-1 min-w-0 truncate">
                   <Lock className="w-3 h-3 text-[#71717a] shrink-0" />
-                  geist-security://smart-launchpad.session
+                  <span className="sm:hidden truncate">smart-launchpad</span>
+                  <span className="hidden sm:inline truncate">geist-security://smart-launchpad.session</span>
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded border border-[#0070f3]/30 bg-[#0070f3]/10 font-mono text-[10px] text-[#0070f3] font-medium tracking-wide">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <span className="px-1.5 sm:px-2 py-0.5 rounded border border-[#0070f3]/30 bg-[#0070f3]/10 font-mono text-[9px] sm:text-[10px] text-[#0070f3] font-medium tracking-wide whitespace-nowrap">
                   READY TO AUDIT
                 </span>
                 <Terminal className="w-3.5 h-3.5 text-[#71717a] hidden sm:block" />
@@ -627,35 +630,40 @@ export const HomePage: React.FC = () => {
 
         {/* 4. TERMINAL PREVIEW */}
         <section className="max-w-5xl mx-auto w-full mt-12 sm:mt-16 mb-16 sm:mb-20 p-3 sm:p-4 rounded-xl bg-black border border-[#1e1e22] font-mono text-xs shadow-xl">
-          <div className="h-9 bg-[#111113]/70 border-b border-[#1e1e22] -mx-3 sm:-mx-4 -mt-3 sm:-mt-4 mb-3 px-3 sm:px-4 flex items-center justify-between rounded-t-xl">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#27272a]" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#27272a]" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#27272a]" />
-              <span className="font-mono text-[11px] sm:text-xs text-[#a1a1aa] ml-2 sm:ml-3 flex items-center gap-1.5 truncate">
+          <div className="h-9 bg-[#111113]/70 border-b border-[#1e1e22] -mx-3 sm:-mx-4 -mt-3 sm:-mt-4 mb-3 px-3 sm:px-4 flex items-center justify-between rounded-t-xl gap-2 min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#27272a]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#27272a]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#27272a]" />
+              </div>
+              <span className="font-mono text-[10px] sm:text-xs text-[#a1a1aa] ml-1.5 sm:ml-3 flex items-center gap-1 min-w-0 truncate">
                 <Lock className="w-3 h-3 text-[#71717a] shrink-0" />
-                geist-security://telemetry-preview.log
+                <span className="sm:hidden truncate">telemetry-preview</span>
+                <span className="hidden sm:inline truncate">geist-security://telemetry-preview.log</span>
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded border border-[#0070f3]/30 bg-[#0070f3]/10 font-mono text-[10px] text-[#0070f3] font-medium tracking-wide">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <span className="px-1.5 sm:px-2 py-0.5 rounded border border-[#0070f3]/30 bg-[#0070f3]/10 font-mono text-[9px] sm:text-[10px] text-[#0070f3] font-medium tracking-wide whitespace-nowrap">
                 LIVE TELEMETRY
               </span>
               <Terminal className="w-3.5 h-3.5 text-[#71717a] hidden sm:block" />
             </div>
           </div>
 
-          <div className="space-y-1.5 overflow-x-auto p-1 text-[11px] sm:text-xs">
-            {TERMINAL_LOGS.map((log, index) => (
-              <div key={index} className={`flex items-start sm:items-center gap-2 sm:gap-3 ${log.containerClass} min-w-0`}>
-                <span className="text-[#52525b] select-none shrink-0">{log.time}</span>
-                <span className={`font-semibold shrink-0 ${log.tagColor}`}>{log.tag}</span>
-                <span className="break-all sm:break-normal">{log.message}</span>
+          <div className="overflow-x-auto p-1 text-[11px] sm:text-xs">
+            <div className="space-y-1.5 min-w-max">
+              {TERMINAL_LOGS.map((log, index) => (
+                <div key={index} className={`flex items-center gap-2 sm:gap-3 ${log.containerClass} whitespace-nowrap`}>
+                  <span className="text-[#52525b] select-none shrink-0 font-mono">{log.time}</span>
+                  <span className={`font-semibold shrink-0 font-mono ${log.tagColor}`}>{log.tag}</span>
+                  <span className="whitespace-nowrap font-mono">{log.message}</span>
+                </div>
+              ))}
+              <div className="flex items-center gap-3 mt-1 text-[#52525b] whitespace-nowrap">
+                <span className="select-none font-mono">00:03.15</span>
+                <span className="text-[#71717a] animate-pulse">█</span>
               </div>
-            ))}
-            <div className="flex items-center gap-3 mt-1 text-[#52525b]">
-              <span className="select-none">00:03.15</span>
-              <span className="text-[#71717a] animate-pulse">█</span>
             </div>
           </div>
         </section>

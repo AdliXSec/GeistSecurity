@@ -1,6 +1,13 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { createAudit, type AuditMode } from '../lib/api';
+import {
+  createAudit,
+  fetchPresets,
+  createPreset,
+  deletePresetApi,
+  restoreDemoPresetsApi,
+  type AuditMode,
+} from '../lib/api';
 
 interface Preset {
   id: string;
@@ -9,58 +16,82 @@ interface Preset {
   repo: string;
   branch: string;
   mode: AuditMode;
+  isDemo?: boolean;
 }
 
-const PRESETS: Preset[] = [
-  {
-    id: 'local-lab',
-    projectName: 'Local Lab Target (0.0.0.0:1412)',
-    url: 'http://0.0.0.0:1412/',
-    repo: '',
-    branch: 'main',
-    mode: 'BLACKBOX',
-  },
-  {
-    id: 'ecommerce',
-    projectName: 'Modern E-Commerce Portal',
-    url: 'https://demo-shop.dev',
-    repo: 'https://github.com/company/ecommerce-web',
-    branch: 'main',
-    mode: 'HYBRID',
-  },
-  {
-    id: 'fintech',
-    projectName: 'Fintech Payment Gateway',
-    url: 'https://demo-fintech.auraglass.io',
-    repo: 'https://github.com/auraglass/fintech-dashboard-api',
-    branch: 'main',
-    mode: 'HYBRID',
-  },
-  {
-    id: 'edge',
-    projectName: 'Edge Gateway Blackbox',
-    url: 'https://edge.secure-gateway.io',
-    repo: '',
-    branch: 'main',
-    mode: 'BLACKBOX',
-  },
-  {
-    id: 'auth-repo',
-    projectName: 'Auth Service SAST',
-    url: '',
-    repo: 'https://github.com/acme-corp/auth-core',
-    branch: 'main',
-    mode: 'WHITEBOX',
-  },
-];
+const PRESETS_STORAGE_KEY = 'secaudit_presets_v1';
+
+const DEFAULT_DEMO_PRESET: Preset = {
+  id: 'demo-fintech',
+  projectName: 'Fintech Payment Gateway (Demo)',
+  url: 'https://demo-fintech.auraglass.io',
+  repo: 'https://github.com/auraglass/fintech-dashboard-api',
+  branch: 'main',
+  mode: 'HYBRID',
+  isDemo: true,
+};
+
+function loadPresets(): Preset[] {
+  try {
+    const raw = localStorage.getItem(PRESETS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch { /* ignore */ }
+  return [DEFAULT_DEMO_PRESET];
+}
+
+function persistPresets(list: Preset[]) {
+  try {
+    localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(list));
+  } catch { /* ignore */ }
+}
 
 export default function NewAuditPage() {
   const navigate = useNavigate();
 
-  const [projectName, setProjectName] = useState('Modern E-Commerce Portal');
+  // Preset state (persisted in database + cached in localStorage)
+  const [presets, setPresets] = useState<Preset[]>(loadPresets);
+  const [isSyncingPresets, setIsSyncingPresets] = useState(false);
+  const [showSavePreset, setShowSavePreset] = useState(false);
+  const [presetSaveName, setPresetSaveName] = useState('');
+
+  // Fetch presets from database (Supabase Cloud + Local SQLite) on mount
+  useEffect(() => {
+    let isMounted = true;
+    fetchPresets()
+      .then((items) => {
+        if (isMounted && Array.isArray(items) && items.length > 0) {
+          const mapped: Preset[] = items.map((i) => ({
+            id: i.id,
+            projectName: i.project_name,
+            url: i.url || '',
+            repo: i.repo || '',
+            branch: i.branch || 'main',
+            mode: i.mode,
+            isDemo: Boolean(i.is_demo),
+          }));
+          setPresets(mapped);
+          persistPresets(mapped);
+        }
+      })
+      .catch((err) => {
+        console.warn('Unable to sync presets from cloud DB:', err);
+      })
+      .finally(() => {
+        if (isMounted) setIsSyncingPresets(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const [projectName, setProjectName] = useState('');
   const [mode, setMode] = useState<AuditMode>('HYBRID');
-  const [websiteUrl, setWebsiteUrl] = useState('https://demo-shop.dev');
-  const [repoUrl, setRepoUrl] = useState('https://github.com/company/ecommerce-web');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [repoUrl, setRepoUrl] = useState('');
   const [branch, setBranch] = useState('main');
 
   // Advanced options state
@@ -71,17 +102,106 @@ export default function NewAuditPage() {
   const [enableNuclei, setEnableNuclei] = useState(true);
   const [nucleiProfile, setNucleiProfile] = useState<'quick' | 'full'>('quick');
 
+  // Authenticated scanning state
+  const [showAuth, setShowAuth] = useState(false);
+  const [authToken, setAuthToken] = useState('');
+  const [authCookieString, setAuthCookieString] = useState('');
+
   // Submission state
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const applyPreset = (preset: Preset) => {
-    setProjectName(preset.projectName);
+    setProjectName(preset.projectName.replace(/\s*\(Demo\)$/i, ''));
     setMode(preset.mode);
     setWebsiteUrl(preset.url);
     setRepoUrl(preset.repo);
     setBranch(preset.branch);
     setErrorMessage(null);
+  };
+
+  const handleSavePreset = async () => {
+    const name = presetSaveName.trim() || projectName.trim() || 'Custom Preset';
+    const tempId = `custom-${Date.now()}`;
+    const newPreset: Preset = {
+      id: tempId,
+      projectName: name,
+      url: websiteUrl.trim(),
+      repo: repoUrl.trim(),
+      branch: branch.trim() || 'main',
+      mode,
+      isDemo: false,
+    };
+    
+    // Optimistic UI update
+    const updated = [...presets, newPreset];
+    setPresets(updated);
+    persistPresets(updated);
+    setShowSavePreset(false);
+    setPresetSaveName('');
+
+    // Persist to Cloud Database (Supabase + Local SQLite)
+    try {
+      const saved = await createPreset({
+        project_name: name,
+        mode,
+        url: websiteUrl.trim(),
+        repo: repoUrl.trim(),
+        branch: branch.trim() || 'main',
+        is_demo: false,
+      });
+      if (saved && saved.id) {
+        setPresets((prev) =>
+          prev.map((p) =>
+            p.id === tempId ? { ...p, id: saved.id, projectName: saved.project_name } : p
+          )
+        );
+      }
+    } catch (err) {
+      console.warn('Failed to persist preset to database:', err);
+    }
+  };
+
+  const handleDeletePreset = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Optimistic UI update
+    const updated = presets.filter((p) => p.id !== id);
+    setPresets(updated);
+    persistPresets(updated);
+
+    // Delete from Cloud Database (Supabase + Local SQLite)
+    try {
+      await deletePresetApi(id);
+    } catch (err) {
+      console.warn('Failed to delete preset from database:', err);
+    }
+  };
+
+  const handleRestoreDefault = async () => {
+    // Optimistic update
+    const updated = [DEFAULT_DEMO_PRESET];
+    setPresets(updated);
+    persistPresets(updated);
+
+    // Call restore API
+    try {
+      const restored = await restoreDemoPresetsApi();
+      if (Array.isArray(restored) && restored.length > 0) {
+        const mapped: Preset[] = restored.map((i) => ({
+          id: i.id,
+          projectName: i.project_name,
+          url: i.url || '',
+          repo: i.repo || '',
+          branch: i.branch || 'main',
+          mode: i.mode,
+          isDemo: Boolean(i.is_demo),
+        }));
+        setPresets(mapped);
+        persistPresets(mapped);
+      }
+    } catch (err) {
+      console.warn('Failed to reset demo presets in database:', err);
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -106,6 +226,8 @@ export default function NewAuditPage() {
         js_exposure: jsExposure,
         enable_nuclei: enableNuclei,
         nuclei_profile: nucleiProfile,
+        auth_token: authToken.trim() || undefined,
+        auth_cookie_string: authCookieString.trim() || undefined,
       });
 
       // Navigate to progress page with the real returned session_id
@@ -141,23 +263,135 @@ export default function NewAuditPage() {
         </div>
 
         {/* Quick Presets Section */}
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           <div className="flex items-center justify-between text-xs font-mono">
-            <span className="text-[#71717a] uppercase tracking-wider">Quick Presets</span>
-            <span className="text-[#52525b]">1-Click Preload</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[#71717a] uppercase tracking-wider">Quick Presets</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#111113] border border-[#1e1e22] text-[#a1a1aa]">
+                {presets.length} active
+              </span>
+              {isSyncingPresets && (
+                <span className="text-[10px] text-[#71717a] flex items-center gap-1 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  syncing...
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {!showSavePreset ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPresetSaveName(projectName || '');
+                    setShowSavePreset(true);
+                  }}
+                  className="text-xs text-white hover:text-emerald-400 transition-colors flex items-center gap-1 font-mono"
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Save Current as Preset</span>
+                </button>
+              ) : null}
+              {presets.length === 0 && (
+                <button
+                  type="button"
+                  onClick={handleRestoreDefault}
+                  className="text-xs text-[#a1a1aa] hover:text-white underline font-mono"
+                >
+                  Restore Demo
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* Inline Preset Creator Form */}
+          {showSavePreset && (
+            <div className="p-3 bg-[#111113] border border-[#1e1e22] rounded-xl space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-mono text-[#a1a1aa]">
+                <span>Save Current Target Configuration</span>
+                <span className="text-[#52525b]">Mode: {mode} · Branch: {branch || 'main'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={presetSaveName}
+                  onChange={(e) => setPresetSaveName(e.target.value)}
+                  placeholder="Nama Preset (mis. Production Auth API / Staging E-Commerce)"
+                  className="flex-1 h-8 px-2.5 bg-[#0a0a0a] rounded-lg border border-[#1e1e22] text-xs font-mono text-white placeholder-[#52525b] focus:outline-none focus:border-[#71717a]"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSavePreset();
+                    } else if (e.key === 'Escape') {
+                      setShowSavePreset(false);
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleSavePreset}
+                  className="h-8 px-3 rounded-lg bg-white text-black hover:bg-[#e5e2e1] text-xs font-mono font-medium transition-all"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSavePreset(false)}
+                  className="h-8 px-2.5 rounded-lg border border-[#1e1e22] text-[#71717a] hover:text-white text-xs font-mono transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Presets Chips */}
           <div className="flex flex-wrap items-center gap-2">
-            {PRESETS.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => applyPreset(p)}
-                className="px-3 py-1.5 rounded-lg text-xs font-mono bg-[#111113] border border-[#1e1e22] hover:bg-[#161618] text-[#d4d4d8] hover:text-white transition-all flex items-center gap-1.5"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>{p.projectName}</span>
-              </button>
-            ))}
+            {presets.length === 0 ? (
+              <div className="text-xs font-mono text-[#52525b] py-1 flex items-center gap-2">
+                <span>Belum ada preset tersimpan.</span>
+                <button
+                  type="button"
+                  onClick={handleRestoreDefault}
+                  className="text-white underline hover:text-emerald-400"
+                >
+                  Muat ulang Preset Demo Fintech
+                </button>
+              </div>
+            ) : (
+              presets.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => applyPreset(p)}
+                  role="button"
+                  tabIndex={0}
+                  className="group px-2.5 py-1.5 rounded-lg text-xs font-mono bg-[#111113] border border-[#1e1e22] hover:bg-[#161618] hover:border-[#27272a] text-[#d4d4d8] hover:text-white transition-all flex items-center gap-2 cursor-pointer select-none"
+                  title={`Klik untuk memuat target: ${p.url || p.repo}`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      p.isDemo ? 'bg-emerald-400' : 'bg-cyan-400'
+                    }`}
+                  />
+                  <span>{p.projectName}</span>
+                  <span className="text-[10px] px-1 py-0.2 rounded bg-[#1e1e22] text-[#71717a] uppercase font-mono">
+                    {p.mode}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeletePreset(p.id, e)}
+                    className="text-[#71717a] hover:text-red-400 hover:bg-[#27272a]/60 rounded p-0.5 ml-0.5 transition-colors"
+                    title="Hapus preset ini"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -479,6 +713,94 @@ export default function NewAuditPage() {
               </div>
             )}
           </div>
+
+          {/* Authenticated Scanning & Session Credentials (Blackbox & Hybrid only) */}
+          {mode !== 'WHITEBOX' && (
+            <div className="bg-[#0a0a0a] border border-[#1e1e22] rounded-xl p-4 sm:p-5 space-y-4">
+              <button
+                type="button"
+                onClick={() => setShowAuth(!showAuth)}
+                className="w-full flex items-center justify-between text-left group"
+              >
+                <div className="flex items-center gap-2">
+                  <svg
+                    className={`w-3.5 h-3.5 text-[#71717a] transition-transform duration-200 ${
+                      showAuth ? 'rotate-90' : ''
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono uppercase tracking-wider text-[#a1a1aa] group-hover:text-white transition-colors">
+                        Authenticated Scan &amp; Private API Access
+                      </span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        P1 / IDOR Support
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-mono text-[#52525b] block mt-0.5">
+                      Suntikkan header / cookie sesi untuk audit endpoint private dan Broken Access Control
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[11px] font-mono text-[#71717a] hidden sm:block">
+                  {showAuth ? 'Hide Auth Config' : (authToken || authCookieString ? 'Active Credentials' : 'Configure')}
+                </span>
+              </button>
+
+              {showAuth && (
+                <div className="pt-3 border-t border-[#1e1e22] space-y-4">
+                  {/* Auth Token / Bearer Header */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="auth-token" className="block text-xs font-mono text-[#a1a1aa]">
+                      Authorization Token / Bearer Key
+                    </label>
+                    <input
+                      id="auth-token"
+                      type="text"
+                      value={authToken}
+                      onChange={(e) => setAuthToken(e.target.value)}
+                      placeholder="Bearer eyJhbGciOi... atau secret_api_key_xxx"
+                      className="w-full h-9 px-3 bg-[#000000] rounded-lg border border-[#1e1e22] text-xs font-mono text-white placeholder-[#52525b] focus:outline-none focus:border-[#71717a]"
+                    />
+                    <p className="text-[11px] font-mono text-[#52525b]">
+                      Otomatis disuntikkan ke HTTP header <code className="text-[#a1a1aa]">Authorization: Bearer &lt;token&gt;</code> untuk seluruh modul recon &amp; Nuclei DAST.
+                    </p>
+                  </div>
+
+                  {/* Auth Cookie String */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="auth-cookies" className="block text-xs font-mono text-[#a1a1aa]">
+                      Session Cookies (Cookie Header String)
+                    </label>
+                    <textarea
+                      id="auth-cookies"
+                      rows={2}
+                      value={authCookieString}
+                      onChange={(e) => setAuthCookieString(e.target.value)}
+                      placeholder="session=a8f9c1...; connect.sid=s%3A...; user_id=102"
+                      className="w-full p-2.5 bg-[#000000] rounded-lg border border-[#1e1e22] text-xs font-mono text-white placeholder-[#52525b] focus:outline-none focus:border-[#71717a] resize-none"
+                    />
+                    <p className="text-[11px] font-mono text-[#52525b]">
+                      Format standar <code className="text-[#a1a1aa]">key=value; key2=value2</code> untuk menembus form login wall dan audit endpoint pengguna terotentikasi.
+                    </p>
+                  </div>
+
+                  {/* Privacy / Zero Plaintext Note */}
+                  <div className="p-2.5 rounded-lg bg-[#000000]/60 border border-[#1e1e22] flex items-center gap-2 text-[11px] font-mono text-[#71717a]">
+                    <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <span>Privasi Pentest: Kredensial aktif di memori scan sesi lokal dan otomatis disensor <code className="text-zinc-300">[REDACTED]</code> sebelum disimpan.</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Start Audit Button */}
           <button

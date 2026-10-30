@@ -171,7 +171,9 @@ def evaluate_simple_dsl(expr: str, resp: httpx.Response) -> bool:
 async def run_python_nuclei_fallback(
     target_url: str,
     scan_profile: str = "quick",
-    progress_callback: Optional[Callable[[str, int, str], Awaitable[None]]] = None
+    progress_callback: Optional[Callable[[str, int, str], Awaitable[None]]] = None,
+    auth_headers: Optional[Dict[str, str]] = None,
+    auth_cookies: Optional[Dict[str, str]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Fallback native Python untuk mengeksekusi template kurasi Nuclei langsung via HTTP async
@@ -206,7 +208,7 @@ async def run_python_nuclei_fallback(
     # Batasi jumlah template jika profile quick agar aman untuk batas waktu Vercel
     is_quick = str(scan_profile).lower() not in ["full", "deep"]
     if is_quick and len(template_files) > 25:
-        priority_keywords = ["env", "git", "sourcemap", "secret", "backup", "dump", "takeover", "swagger", "cors"]
+        priority_keywords = ["env", "git", "sourcemap", "secret", "backup", "dump", "takeover", "swagger", "cors", "param", "xss", "sqli", "dast"]
         prioritized = [
             t for t in template_files
             if any(k in t.name.lower() or any(k in part.lower() for part in t.parts) for k in priority_keywords)
@@ -219,7 +221,20 @@ async def run_python_nuclei_fallback(
         "Accept-Language": "en-US,en;q=0.9"
     }
 
-    async with httpx.AsyncClient(headers=headers, timeout=4.0, verify=False, follow_redirects=True) as client:
+    # Merge custom auth headers (overwrites defaults if same key)
+    if auth_headers:
+        for k, v in auth_headers.items():
+            headers[k] = v
+
+    # Build httpx cookie jar for auth cookies
+    auth_cookie_jar = None
+    if auth_cookies:
+        import httpx as _httpx
+        auth_cookie_jar = _httpx.Cookies()
+        for k, v in auth_cookies.items():
+            auth_cookie_jar.set(k, v)
+
+    async with httpx.AsyncClient(headers=headers, timeout=4.0, verify=False, follow_redirects=True, cookies=auth_cookie_jar) as client:
         # 1. Baseline Soft-404 Detection
         soft404_status = 404
         soft404_len = 0
@@ -472,10 +487,13 @@ async def run_nuclei_scan(
     concurrency: int = 25,
     rate_limit: int = 50,
     timeout_seconds: int = 180,
-    progress_callback: Optional[Callable[[str, int, str], Awaitable[None]]] = None
+    progress_callback: Optional[Callable[[str, int, str], Awaitable[None]]] = None,
+    auth_headers: Optional[Dict[str, str]] = None,
+    auth_cookies: Optional[Dict[str, str]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Menjalankan audit Nuclei berbasis profile terkurasi SecAudit.
+    Mendukung autentikasi custom header & cookie untuk scanning endpoint private.
     Mengembalikan findings list dalam format standar SecAudit.
     Jika binary Nuclei tidak ditemukan (misal di Vercel), otomatis menggunakan Python Fallback Runner.
     """
@@ -484,7 +502,9 @@ async def run_nuclei_scan(
         return await run_python_nuclei_fallback(
             target_url=target_url,
             scan_profile=scan_profile,
-            progress_callback=progress_callback
+            progress_callback=progress_callback,
+            auth_headers=auth_headers,
+            auth_cookies=auth_cookies,
         )
 
     profile_file = resolve_profile_file(scan_profile)
@@ -503,6 +523,18 @@ async def run_nuclei_scan(
         "-timeout", "10",
         "-retries", "1"
     ]
+
+    # Inject custom auth headers into Nuclei CLI via -H flag
+    if auth_headers:
+        for k, v in auth_headers.items():
+            cmd += ["-H", f"{k}: {v}"]
+
+    # Inject auth cookies via -H Cookie header
+    if auth_cookies:
+        cookie_str = "; ".join(f"{k}={v}" for k, v in auth_cookies.items())
+        # Don't duplicate if Cookie already in auth_headers
+        if not auth_headers or "Cookie" not in auth_headers:
+            cmd += ["-H", f"Cookie: {cookie_str}"]
 
     findings: List[Dict[str, Any]] = []
 

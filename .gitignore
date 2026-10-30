@@ -66,3 +66,6 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+supabase_schema.sql
+TestSprite.pdf

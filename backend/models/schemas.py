@@ -31,6 +31,10 @@ class AuditCreateRequest(BaseModel):
     js_exposure: Optional[bool] = Field(default=True, description="Aktifkan ekstraksi dan deobfuscation asset JS")
     enable_nuclei: Optional[bool] = Field(default=True, description="Aktifkan Nuclei scanner berbasis curated templates")
     nuclei_profile: Optional[str] = Field(default="quick", description="Profil Nuclei: quick atau full")
+    auth_headers: Optional[Dict[str, str]] = Field(default=None, description="Header kustom/autentikasi (mis. Authorization: Bearer <token>)")
+    auth_cookies: Optional[Dict[str, str]] = Field(default=None, description="Cookie autentikasi/sesi (mis. session=xxx; token=yyy)")
+    auth_token: Optional[str] = Field(default=None, description="Token bearer atau API key opsional (otomatis disuntikkan ke Authorization header)")
+    auth_cookie_string: Optional[str] = Field(default=None, description="String cookie mentah opsional (mis. session_id=abc; jwt=xyz)")
 
 class AuditCreateResponse(BaseModel):
     session_id: str
@@ -55,6 +59,8 @@ class TargetInfo(BaseModel):
     entropy_threshold: Optional[float] = 4.2
     scan_depth: Optional[str] = "Deep"
     js_exposure: Optional[bool] = True
+    auth_headers: Optional[Dict[str, str]] = None
+    auth_cookies: Optional[Dict[str, str]] = None
     enable_nuclei: Optional[bool] = True
     nuclei_profile: Optional[str] = "quick"
     nuclei_findings_count: Optional[int] = 0
@@ -143,6 +149,14 @@ class JsAssetItem(BaseModel):
     sourcemap_url: Optional[str] = None
     sub_chunks: List[str] = []
 
+class ParameterItem(BaseModel):
+    name: str
+    param_type: str = "QUERY_STRING"
+    endpoint: str = "/"
+    risk_category: str = "STANDARD_INPUT"
+    severity: str = "INFO"
+    description: Optional[str] = None
+
 class ReconSummary(BaseModel):
     open_ports: List[OpenPortItem] = []
     ssl_summary: Optional[SSLSummaryItem] = None
@@ -150,6 +164,7 @@ class ReconSummary(BaseModel):
     sensitive_dirs: List[SensitiveDirItem] = []
     html_leaks: List[Dict[str, Any]] = []
     js_assets: List[JsAssetItem] = []
+    discovered_parameters: List[ParameterItem] = []
 
 class AuditReportResponse(BaseModel):
     session_id: str
@@ -230,3 +245,23 @@ class AuthTokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+class PresetCreateRequest(BaseModel):
+    project_name: str = Field(..., max_length=150, description="Preset identifier name")
+    mode: AuditMode = Field(default=AuditMode.HYBRID, description="Audit operation mode")
+    url: Optional[str] = Field(default="", description="Target web application URL")
+    repo: Optional[str] = Field(default="", description="Target GitHub repository URL")
+    branch: Optional[str] = Field(default="main", description="Target Git branch")
+    is_demo: Optional[bool] = Field(default=False, description="Flag indicating system demo preset")
+
+class PresetResponse(BaseModel):
+    id: str
+    user_id: Optional[str] = None
+    project_name: str
+    mode: str
+    url: Optional[str] = ""
+    repo: Optional[str] = ""
+    branch: Optional[str] = "main"
+    is_demo: bool = False
+    created_at: str
+    updated_at: Optional[str] = None

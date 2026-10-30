@@ -121,10 +121,13 @@ async def scan_blackbox(
     js_exposure: bool = True,
     enable_nuclei: bool = True,
     nuclei_profile: str = "quick",
-    progress_callback: Optional[Callable[[str, int, str], Awaitable[None]]] = None
+    progress_callback: Optional[Callable[[str, int, str], Awaitable[None]]] = None,
+    auth_headers: Optional[Dict[str, str]] = None,
+    auth_cookies: Optional[Dict[str, str]] = None,
 ) -> Tuple[List[Dict[str, Any]], List[str], Dict[str, Any]]:
     """
     Menjalankan audit reconnaissance & blackbox surface attack comprehensive (7 modul bawaan + Nuclei curated engine).
+    Mendukung authenticated scanning dengan custom headers & cookies.
     Mengembalikan (findings, detected_tech_names, recon_summary).
     """
     if not target_url:
@@ -134,7 +137,9 @@ async def scan_blackbox(
         target_url,
         entropy_threshold=entropy_threshold,
         scan_depth=scan_depth,
-        js_exposure=js_exposure
+        js_exposure=js_exposure,
+        auth_headers=auth_headers,
+        auth_cookies=auth_cookies,
     )
 
     nuclei_findings: List[Dict[str, Any]] = []
@@ -145,7 +150,9 @@ async def scan_blackbox(
             nuclei_task = run_nuclei_scan(
                 target_url,
                 scan_profile=profile_name,
-                progress_callback=progress_callback
+                progress_callback=progress_callback,
+                auth_headers=auth_headers,
+                auth_cookies=auth_cookies,
             )
             recon_data, nuclei_findings = await asyncio.gather(recon_task, nuclei_task)
         except Exception as e:
@@ -172,6 +179,7 @@ async def scan_blackbox(
         "sensitive_dirs": recon_data.get("sensitive_dirs", []),
         "html_leaks": recon_data.get("html_leaks", []),
         "js_assets": recon_data.get("js_assets", []),
+        "discovered_parameters": recon_data.get("discovered_parameters", []),
         "nuclei_findings_count": len(nuclei_findings),
         "enable_nuclei": enable_nuclei,
         "nuclei_profile": nuclei_profile

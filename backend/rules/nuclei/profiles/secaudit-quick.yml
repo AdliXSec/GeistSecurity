@@ -9,6 +9,7 @@ templates:
   - 02-misconfigurations/headers-and-cors
   - 02-misconfigurations/debug-and-info-leaks
   - 03-often-overlooked/takeovers
+  - 05-core-dast/sqli-and-xss
 
 severity:
   - critical

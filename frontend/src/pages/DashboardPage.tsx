@@ -769,7 +769,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="pt-8 pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="pt-8 pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full min-w-0 overflow-x-clip">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#111113] border border-[#27272a] text-[#ededed] text-xs font-mono shadow-2xl animate-in fade-in slide-in-from-bottom duration-200">
@@ -936,7 +936,7 @@ export default function DashboardPage() {
             </button>
 
             {showColumnsMenu && (
-              <div className="absolute right-0 mt-2 w-56 rounded-xl bg-[#0a0a0a] border border-[#27272a] shadow-2xl p-2 z-40 flex flex-col gap-1">
+              <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-xl bg-[#0a0a0a] border border-[#27272a] shadow-2xl p-2 z-40 flex flex-col gap-1">
                 <span className="text-[10px] font-mono text-[#71717a] uppercase px-2 py-1 tracking-wider">
                   Toggle Columns
                 </span>
@@ -1140,7 +1140,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Grade tabs */}
-          <div className="flex items-center gap-1 bg-[#0a0a0a] border border-[#1e1e22] p-1 rounded-lg">
+          <div className="flex items-center gap-1 bg-[#0a0a0a] border border-[#1e1e22] p-1 rounded-lg overflow-x-auto max-w-full">
             {(['All', 'Grade A', 'Grade B', 'Grade C/D'] as GradeFilter[]).map((f) => (
               <button
                 key={f}
@@ -1176,7 +1176,7 @@ export default function DashboardPage() {
             </button>
 
             {showEnvMenu && (
-              <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#0a0a0a] border border-[#27272a] shadow-2xl p-1.5 z-40 flex flex-col gap-0.5">
+              <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-48 max-w-[calc(100vw-2rem)] rounded-xl bg-[#0a0a0a] border border-[#27272a] shadow-2xl p-1.5 z-40 flex flex-col gap-0.5">
                 {(['All', 'Prod & Staging', 'Prod', 'Staging'] as EnvFilter[]).map((env) => (
                   <button
                     key={env}
@@ -1225,7 +1225,7 @@ export default function DashboardPage() {
             </button>
 
             {showSortMenu && (
-              <div className="absolute right-0 mt-2 w-52 rounded-xl bg-[#0a0a0a] border border-[#27272a] shadow-2xl p-1.5 z-40 flex flex-col gap-0.5">
+              <div className="absolute right-0 mt-2 w-52 max-w-[calc(100vw-2rem)] rounded-xl bg-[#0a0a0a] border border-[#27272a] shadow-2xl p-1.5 z-40 flex flex-col gap-0.5">
                 {[
                   { id: 'recent', label: 'Recent Scan' },
                   { id: 'score_desc', label: 'Health Score: High to Low' },
@@ -1602,7 +1602,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto max-w-full py-1">
           <button
             type="button"
             disabled={currentSafePage <= 1}
